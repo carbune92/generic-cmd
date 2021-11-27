@@ -1,0 +1,6 @@
+.DS_Store
+.vscode/
+comenzi de implementat.txt
+main.dSYM/
+WiringPI_stubs.dSYM/
+PiWatcher_Server.dSYM/
