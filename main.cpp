@@ -110,5 +110,16 @@ int main()
   qContainer.get_CmdQ().clear();
   qContainer.push_back(p_polCmd, def::t_CmdTypes::e_CmdEndOfCycle);
 
+
+  auto piwatcher_cmd = std::make_shared<cmd::Cmd<PiWatcherServer>>(2,4);
+
+  cmd::Cmd<PiWatcherServer,policies::DeallocMemPrecond> piwatcher_cmd_pol2{2,4};
+  cmd::Cmd<PiWatcherServer> piwatcher_cmd2{2,4};
+  cmd::Cmd<PiWatcherServer,policies::DeallocMemPrecond> piwatcher_cmd_pol(piwatcher_cmd2);
+  piwatcher_cmd_pol.dealloc();
+  std::cout << (int)piwatcher_cmd2.getC_ID() << '\n';
+  std::cout << (int)piwatcher_cmd_pol.getC_ID() << '\n';
+  std::cout << (int)piwatcher_cmd_pol2.getC_ID() << '\n';
+
   return 0;
 }
