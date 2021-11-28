@@ -4,4 +4,5 @@ comenzi de implementat.txt
 main.dSYM/
 WiringPI_stubs.dSYM/
 PiWatcher_Server.dSYM/
-./main
+main
+generic_cmd.zip
