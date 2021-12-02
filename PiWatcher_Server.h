@@ -1,8 +1,7 @@
 #ifndef __PIWATCHER_SERVER_H__
 #define __PIWATCHER_SERVER_H__
 
-#include <wiringPi.h>
-#include <wiringPiI2C.h>
+#include "WiringPI_stubs.h"
 
 #include "common.h"
 
