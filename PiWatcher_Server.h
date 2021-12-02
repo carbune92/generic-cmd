@@ -1,8 +1,9 @@
 #ifndef __PIWATCHER_SERVER_H__
 #define __PIWATCHER_SERVER_H__
 
-// #include "PiWatcher_Cmd.h"
-#include "WiringPI_stubs.h"
+#include <wiringPi.h>
+#include <wiringPiI2C.h>
+
 #include "common.h"
 
 #include <array>
