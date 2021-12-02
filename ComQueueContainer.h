@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <memory>
-#include <optional>
 #include "Cmd.h"
 
 class ComQueueContainer
