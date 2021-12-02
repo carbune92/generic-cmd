@@ -31,21 +31,21 @@ int main()
   p_gen[0]->execute();
   p_gen[1]->execute();
 
-  ComQueueContainer qContainer;
-  ComServerContainer sContainer{p_server, p_restart_server};
+  ComQueueContainer* qContainer = new ComQueueContainer;
+  ComServerContainer* sContainer = new ComServerContainer{p_server, p_restart_server};
 
   ComManager cmdManager{sContainer, qContainer};
 
   auto p = std::make_shared<cmd::Cmd<Restart_Server>>(2,1);
-  qContainer.push_back(p);
-  // qContainer.get_CmdQ().push_back(p);
+  qContainer->push_back(p);
+  // qContainer->get_CmdQ()->push_back(p);
 
   cmd::Cmd<Restart_Server> smen{1,1};
   std::cout << (int)smen.getC_ID() << '\n';
   smen = cmd::Cmd<Restart_Server>{1,2};
   std::cout << (int)smen.getC_ID() << '\n';
 
-  qContainer.get_CmdQ().clear();
+  qContainer->get_CmdQ().clear();
   unsigned char buffer[256];
   buffer[0] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
   buffer[1] = cmd_format::t_CmdId::COMMAND_IMMEDIATE_REBOOT;
@@ -56,8 +56,8 @@ int main()
     std::cerr << "parse failed with res: " << res << std::endl;
   }
 
-  std::cout << qContainer.get_CmdQ().size() << '\n';
-  def::GenCmdPtr_t gen_cmd_ptr = qContainer.get_CmdQ().front();
+  std::cout << qContainer->get_CmdQ().size() << '\n';
+  def::GenCmdPtr_t gen_cmd_ptr = qContainer->get_CmdQ().front();
   gen_cmd_ptr->execute();
   gen_cmd_ptr = nullptr;
 
@@ -71,13 +71,13 @@ int main()
   {
     std::cerr << "parse failed with res: " << res << std::endl;
   }
-  std::cout << qContainer.get_CmdQ().size() << '\n';
-  gen_cmd_ptr = qContainer.get_CmdQ().back();
+  std::cout << qContainer->get_CmdQ().size() << '\n';
+  gen_cmd_ptr = qContainer->get_CmdQ().back();
   gen_cmd_ptr->execute();
 
 
   std::fill(buffer, buffer+sizeof(buffer), 0U);
-  qContainer.get_CmdQ().clear();
+  qContainer->get_CmdQ().clear();
   buffer[0] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
   buffer[1] = cmd_format::t_CmdId::COMMAND_WATCHDOG;
   buffer[2] = cmd_format::t_watchdog::REG_WATCHDOG_WATCH;
@@ -95,9 +95,9 @@ int main()
 
   cmdManager.getByteStream(&buffer[0], sizeof(buffer));
   res = cmdManager.parseCommand();
-  std::cout << qContainer.get_CmdQ().size() << '\n';
+  std::cout << qContainer->get_CmdQ().size() << '\n';
 
-  for (auto p : qContainer.get_CmdQ())
+  for (auto p : qContainer->get_CmdQ())
   {
     p->execute();
   }
@@ -107,8 +107,8 @@ int main()
   p_polCmd->init(p_restart_server, &Restart_Server::immediatePiRestart, {});
   p_polCmd->execute();
 
-  qContainer.get_CmdQ().clear();
-  qContainer.push_back(p_polCmd, def::t_CmdTypes::e_CmdEndOfCycle);
+  qContainer->get_CmdQ().clear();
+  qContainer->push_back(p_polCmd, def::t_CmdTypes::e_CmdEndOfCycle);
 
 
   auto piwatcher_cmd = std::make_shared<cmd::Cmd<PiWatcherServer>>(2,4);
@@ -120,6 +120,9 @@ int main()
   std::cout << (int)piwatcher_cmd2.getC_ID() << '\n';
   std::cout << (int)piwatcher_cmd_pol.getC_ID() << '\n';
   std::cout << (int)piwatcher_cmd_pol2.getC_ID() << '\n';
+
+  // delete qContainer;
+  // delete sContainer;
 
   return 0;
 }
