@@ -13,6 +13,13 @@ class ComServerContainer
     std::shared_ptr<Restart_Server> restart_server
   ); 
 
+  ComServerContainer();
+
+  void init(
+    std::shared_ptr<PiWatcherServer> piwatcher_server,
+    std::shared_ptr<Restart_Server> restart_server
+  );
+
   std::shared_ptr<PiWatcherServer> get_Piwatcher_server();
   std::shared_ptr<Restart_Server> get_Restart_server();
 

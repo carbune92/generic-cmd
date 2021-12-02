@@ -4,12 +4,25 @@
 
 using namespace cmd_format;
 
-ComManager::ComManager(ComServerContainer& servContainer, ComQueueContainer& commContainer) : 
+ComManager::ComManager(ComServerContainer* servContainer, ComQueueContainer* commContainer) : 
   itsServContainer{servContainer},
   itsCommContainer{commContainer},
   m_byteStream{}
 {}
 
+ComManager::ComManager() {}
+
+ComManager::~ComManager() 
+{
+  delete itsServContainer;
+  delete itsCommContainer;
+}
+
+void ComManager::init(ComServerContainer* servContainer, ComQueueContainer* commContainer)
+{
+  itsServContainer = servContainer;
+  itsCommContainer = commContainer;
+} 
 
 void ComManager::getByteStream(unsigned char *bytes, int max_bytes)
 {
@@ -94,8 +107,8 @@ int ComManager::parseRebootCmd(def::data_t::iterator itBegin, def::data_t::itera
     params.insert(params.begin(), itBegin, itBegin+nr_params_bytes);
     
     auto p = std::make_shared<cmd::Cmd<Restart_Server>>(t_ServiceId::SERViCE_COMMAND_DISTRIBUTION, t_CmdId::COMMAND_IMMEDIATE_REBOOT);
-    p->init(itsServContainer.get_Restart_server(), &Restart_Server::immediatePiRestart, params);
-    itsCommContainer.push_back(p, cmdType);
+    p->init(itsServContainer->get_Restart_server(), &Restart_Server::immediatePiRestart, params);
+    itsCommContainer->push_back(p, cmdType);
   }
 
   return res;
@@ -122,21 +135,21 @@ int ComManager::parseWatchdogCmd(def::data_t::iterator itBegin, def::data_t::ite
       {
         int nr_params_bytes = t_watchdog::NR_BYTES_PARAMS_WAKE;
         params.insert(params.begin(), itBegin, itBegin+nr_params_bytes);
-        p->init(itsServContainer.get_Piwatcher_server(), &PiWatcherServer::wake, params);
+        p->init(itsServContainer->get_Piwatcher_server(), &PiWatcherServer::wake, params);
         break;
       }
       case t_watchdog::REG_WATCHDOG_WATCH:
       {
         int nr_params_bytes = t_watchdog::NR_BYTES_PARAMS_WATCH;
         params.insert(params.begin(), itBegin, itBegin+nr_params_bytes);
-        p->init(itsServContainer.get_Piwatcher_server(), &PiWatcherServer::watch, params);
+        p->init(itsServContainer->get_Piwatcher_server(), &PiWatcherServer::watch, params);
         break;
       }
       case t_watchdog::REG_WATCHDOG_DUMP:
       {
         int nr_params_bytes = t_watchdog::NR_BYTES_PARAMS_DUMP;
         params.insert(params.begin(), itBegin, itBegin+nr_params_bytes);
-        p->init(itsServContainer.get_Piwatcher_server(), &PiWatcherServer::dump, params);
+        p->init(itsServContainer->get_Piwatcher_server(), &PiWatcherServer::dump, params);
       }
       default:
       {
@@ -145,7 +158,7 @@ int ComManager::parseWatchdogCmd(def::data_t::iterator itBegin, def::data_t::ite
       }
     }
 
-    itsCommContainer.push_back(p, cmdType);
+    itsCommContainer->push_back(p, cmdType);
   }
   
   return res;
