@@ -114,9 +114,13 @@ int main()
   auto piwatcher_cmd = std::make_shared<cmd::Cmd<PiWatcherServer>>(2,4);
 
   cmd::Cmd<PiWatcherServer,policies::DeallocMemPrecond> piwatcher_cmd_pol2{2,4};
+  
   cmd::Cmd<PiWatcherServer> piwatcher_cmd2{2,4};
+  piwatcher_cmd2.init(p_server, &PiWatcherServer::status, {2});
+  piwatcher_cmd2.execute();
   cmd::Cmd<PiWatcherServer,policies::DeallocMemPrecond> piwatcher_cmd_pol(piwatcher_cmd2);
   piwatcher_cmd_pol.dealloc();
+  piwatcher_cmd_pol.execute();
   std::cout << (int)piwatcher_cmd2.getC_ID() << '\n';
   std::cout << (int)piwatcher_cmd_pol.getC_ID() << '\n';
   std::cout << (int)piwatcher_cmd_pol2.getC_ID() << '\n';
