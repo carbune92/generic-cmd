@@ -125,5 +125,10 @@ int main()
   std::cout << (int)piwatcher_cmd_pol.getC_ID() << '\n';
   std::cout << (int)piwatcher_cmd_pol2.getC_ID() << '\n';
 
+
+  piwatcher_cmd_pol2 = piwatcher_cmd_pol;
+  piwatcher_cmd_pol2.dealloc();
+  piwatcher_cmd_pol2.execute();
+
   return 0;
 }

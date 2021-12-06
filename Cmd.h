@@ -58,17 +58,21 @@ namespace cmd
       m_callback = other.m_callback;
       m_resp = other.m_resp;
       m_req = other.m_req;
+      m_cid = other.m_cid;
+      m_sid = other.m_sid;
       return *this;
     }
 
-    // Cmd<S,P0,P...>& operator=(const Cmd<S>& other)
-    // {
-    //   m_sptr_server = other.m_sptr_server;
-    //   m_callback = other.m_callback;
-    //   m_resp = other.m_resp;
-    //   m_req = other.m_req;
-    //   return *this;
-    // }
+    Cmd<S,P0,P...>& operator=(const Cmd<S>& other)
+    {
+      m_sptr_server = other.get_sptr_server();
+      m_callback = other.get_callback();
+      m_resp = other.get_resp();
+      m_req = other.get_req();
+      m_cid = other.getC_ID();
+      m_sid = other.getS_ID();
+      return *this;
+    }
 
     Cmd<S,P0,P...>& operator=(Cmd<S,P0,P...>&& other)
     {
