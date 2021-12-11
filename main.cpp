@@ -10,7 +10,7 @@
 #include <memory> 
 #include <iostream>
 
-int main()
+void variousTests()
 {
   std::shared_ptr<PiWatcherServer> p_server = std::make_shared<PiWatcherServer>();
   p_server->setup();
@@ -143,5 +143,10 @@ int main()
   piwatcher_cmd_pol2.dealloc();
   piwatcher_cmd_pol2.execute();
 
+}
+
+int main()
+{
+  variousTests();
   return 0;
 }
