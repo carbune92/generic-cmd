@@ -48,3 +48,66 @@ void ComQueueContainer::push_back(def::GenCmdPtr_t p, def::t_CmdTypes cmdType)
     }
   }
 }
+
+
+  CmdQueueIter ComQueueContainer::begin()
+  {
+    return m_default_cmd.begin();
+  } 
+
+  CmdQueueIter ComQueueContainer::end()
+  {
+    return m_default_cmd.end();
+  }
+
+CmdQueueIter ComQueueContainer::begin(def::t_CmdTypes cmdType)
+{
+  CmdQueueIter iter = m_default_cmd.end();
+  switch (cmdType)
+  {
+    case def::e_CmdDeallocMem:
+    {
+      iter = m_deallocPrecond_cmd.begin();
+      break;
+    }
+    
+    case def::e_CmdEndOfCycle:
+    {
+      iter = m_endOfCycle_cmd.begin();
+      break;
+    }
+    
+    default:
+    {
+      std::cerr << "ComQueueContainer::begin: undefined queue type!" << std::endl;
+    }
+  }
+
+  return iter;
+}
+
+CmdQueueIter ComQueueContainer::end(def::t_CmdTypes cmdType)
+{
+  CmdQueueIter iter = m_default_cmd.end();
+  switch (cmdType)
+  {
+    case def::e_CmdDeallocMem:
+    {
+      iter = m_deallocPrecond_cmd.end();
+      break;
+    }
+    
+    case def::e_CmdEndOfCycle:
+    {
+      iter = m_endOfCycle_cmd.end();
+      break;
+    }
+    
+    default:
+    {
+      std::cerr << "ComQueueContainer::end: undefined queue type!" << std::endl;
+    }
+  }
+
+  return iter;
+}

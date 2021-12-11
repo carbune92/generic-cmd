@@ -66,7 +66,7 @@ int main()
   buffer[2] = cmd_format::t_watchdog::REG_WATCHDOG_WATCH;
   buffer[3] = static_cast<unsigned char>(60);
   cmdManager.getByteStream(&buffer[0], sizeof(buffer));
-  res = cmdManager.parseCommand();  
+  res = cmdManager.parseCommand();
   if (res < 0)
   {
     std::cerr << "parse failed with res: " << res << std::endl;
@@ -98,6 +98,19 @@ int main()
   std::cout << qContainer->get_CmdQ().size() << '\n';
 
   for (auto p : qContainer->get_CmdQ())
+  {
+    p->execute();
+  }
+
+  auto startIt = qContainer->begin();
+  auto endIt = qContainer->end();
+  for (auto it = startIt; it != endIt; it++)
+  {
+    (*it)->execute();
+  }
+
+   // foreach works with overloaded no-parameters begin/end 
+  for (auto p : *qContainer)
   {
     p->execute();
   }
