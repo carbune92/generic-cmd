@@ -108,7 +108,11 @@ int ComManager::parseRebootCmd(def::data_t::iterator itBegin, def::data_t::itera
     
     auto p = std::make_shared<cmd::Cmd<Restart_Server>>(t_ServiceId::SERViCE_COMMAND_DISTRIBUTION, t_CmdId::COMMAND_IMMEDIATE_REBOOT);
     p->init(itsServContainer->get_Restart_server(), &Restart_Server::immediatePiRestart, params);
-    itsCommContainer->push_back(p, cmdType);
+
+
+    // convert p to a pointer to a Cmd with policy 'Logged'
+    auto p_logged = std::make_shared<cmd::Cmd<Restart_Server, policies::Logged>>(*p);
+    itsCommContainer->push_back(p_logged, cmdType);
   }
 
   return res;
@@ -127,6 +131,7 @@ int ComManager::parseWatchdogCmd(def::data_t::iterator itBegin, def::data_t::ite
   {
     def::data_t params{};
     auto p = std::make_shared<cmd::Cmd<PiWatcherServer>>(t_ServiceId::SERViCE_COMMAND_DISTRIBUTION, t_CmdId::COMMAND_WATCHDOG);
+
     uint8_t watchdog_reg = *itBegin;
 
     switch(watchdog_reg)
@@ -157,8 +162,6 @@ int ComManager::parseWatchdogCmd(def::data_t::iterator itBegin, def::data_t::ite
         std::cerr << "ComManager::parseWatchdogCmd: invalid watchdog command" << std::endl;
       }
     }
-
-    itsCommContainer->push_back(p, cmdType);
   }
   
   return res;

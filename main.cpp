@@ -12,6 +12,7 @@
 
 void variousTests()
 {
+  std::cout << "START_TEST : " << __FUNCTION__ << std::endl;
   std::shared_ptr<PiWatcherServer> p_server = std::make_shared<PiWatcherServer>();
   p_server->setup();
 
@@ -143,10 +144,58 @@ void variousTests()
   piwatcher_cmd_pol2.dealloc();
   piwatcher_cmd_pol2.execute();
 
+  std::cout << "END_TEST : " << __FUNCTION__ << std::endl;
+}
+
+void test_Logged_policy()
+{
+  std::cout << "START_TEST : " << __FUNCTION__ << std::endl;
+  std::shared_ptr<PiWatcherServer> p_piWatchserver = std::make_shared<PiWatcherServer>();
+  std::shared_ptr<Restart_Server> p_restartServer = std::make_shared<Restart_Server>();
+  p_piWatchserver->setup();
+  p_restartServer->setup();
+
+  ComQueueContainer* qContainer = new ComQueueContainer;
+  ComServerContainer* sContainer = new ComServerContainer{p_piWatchserver, p_restartServer};
+  ComManager cmdManager{sContainer, qContainer};
+
+  qContainer->get_CmdQ().clear();
+  unsigned char buffer[256];
+  buffer[0] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
+  buffer[1] = cmd_format::t_CmdId::COMMAND_IMMEDIATE_REBOOT;
+  cmdManager.getByteStream(&buffer[0], sizeof(buffer));
+  int res = cmdManager.parseCommand();
+  if (res < 0)
+  {
+    std::cerr << "parse failed with res: " << res << std::endl;
+  }
+
+  for (auto p : *qContainer)
+  {
+    if (utilfunc::isInstanceOf<policies::Logged>(p))
+    {
+      std::cout << "YES, this is a valid instance of Logged!\n";
+      policies::Logged& l = dynamic_cast<policies::Logged&>(*p);
+      l.setFileStream("./restart_log.txt");
+      l.log("pi reboot will commence");
+      p->execute();
+    }
+    else
+    {
+      std::cout << "NO, this is not a valid instance of Logged!\n";
+    }
+    // std::cout << "{" << (int)p->getS_ID() << " " << (int)p->getC_ID() << "}\n";
+  }
+
+  std::cout << "END_TEST : " << __FUNCTION__ << std::endl;
 }
 
 int main()
 {
   variousTests();
+  std::cout << "====================================================\n";
+  test_Logged_policy();
+  std::cout << "====================================================\n";
+
   return 0;
 }

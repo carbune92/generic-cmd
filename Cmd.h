@@ -5,6 +5,7 @@
 #include "CmdPolicies.h"
 #include <algorithm>
 #include <memory>
+#include <typeinfo>
 
 namespace cmd
 {
@@ -234,6 +235,20 @@ namespace def
 
   template <typename T>
   using DeallocMemCmdPtr_t = std::shared_ptr<cmd::Cmd<T, policies::DeallocMemPrecond>>;
+
+  template <typename T>
+  using LoggedCmdPtr_t  = std::shared_ptr<cmd::Cmd<T, policies::Logged>>;
 }
+
+namespace utilfunc
+{
+  template <typename T>
+  inline bool isInstanceOf(def::GenCmdPtr_t p)
+  {
+    return ( (typeid(*p) == typeid(cmd::Cmd<Restart_Server, T>))  ||
+             (typeid(*p) == typeid(cmd::Cmd<PiWatcherServer, T>))
+          );
+  }
+};
 
 #endif

@@ -2,6 +2,10 @@
 #define __CMDPOLICIES_H__
 
 #include <iostream>
+#include "Logged.h"
+
+class Restart_Server;
+class PiWatcherServer;
 
 namespace cmd
 {
@@ -24,4 +28,4 @@ namespace policies
   };
 }
 
-#endif
+#endif  
