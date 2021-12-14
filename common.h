@@ -45,6 +45,7 @@ namespace def
     e_CmdDefault = 0,
     e_CmdEndOfCycle,
     e_CmdDeallocMem,
+    e_Logged,
     /* reserved */
     e_cmd1,
     e_cmd2
