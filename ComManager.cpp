@@ -22,7 +22,18 @@ void ComManager::init(ComServerContainer* servContainer, ComQueueContainer* comm
 {
   itsServContainer = servContainer;
   itsCommContainer = commContainer;
-} 
+}
+
+ComServerContainer& ComManager::getServeContainer()
+{
+  return *itsServContainer;
+}
+
+ComQueueContainer& ComManager::getComQueueContainer()
+{
+  return *itsCommContainer;
+}
+
 
 void ComManager::getByteStream(unsigned char *bytes, int max_bytes)
 {
@@ -156,12 +167,14 @@ int ComManager::parseWatchdogCmd(def::data_t::iterator itBegin, def::data_t::ite
         params.insert(params.begin(), itBegin, itBegin+nr_params_bytes);
         p->init(itsServContainer->get_Piwatcher_server(), &PiWatcherServer::dump, params);
       }
-      default:
+      default:  
       {
         res = -3;
         std::cerr << "ComManager::parseWatchdogCmd: invalid watchdog command" << std::endl;
       }
     }
+
+    itsCommContainer->push_back(p, cmdType);
   }
   
   return res;

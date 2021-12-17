@@ -12,6 +12,8 @@ class ComManager
   int parseCommand();
   void getByteStream(unsigned char *bytes, int max_bytes);
   void init(ComServerContainer* servContainer, ComQueueContainer* commContainer);
+  ComServerContainer& getServeContainer();
+  ComQueueContainer& getComQueueContainer();
 
   ~ComManager();
 
