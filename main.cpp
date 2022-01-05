@@ -10,6 +10,20 @@
 #include <memory> 
 #include <iostream>
 
+ComManager init()
+{
+  std::shared_ptr<PiWatcherServer> p_piWatchserver = std::make_shared<PiWatcherServer>();
+  std::shared_ptr<Restart_Server> p_restartServer = std::make_shared<Restart_Server>();
+  p_piWatchserver->setup();
+  p_restartServer->setup();
+
+  ComQueueContainer* qContainer = new ComQueueContainer;
+  ComServerContainer* sContainer = new ComServerContainer{p_piWatchserver, p_restartServer};
+  ComManager cmdManager{sContainer, qContainer};
+  
+  return cmdManager;
+}
+
 void variousTests()
 {
   std::cout << "START_TEST : " << __FUNCTION__ << std::endl;
@@ -170,10 +184,17 @@ void test_Logged_policy()
     std::cerr << "parse failed with res: " << res << std::endl;
   }
 
+  // cmd::Cmd<Restart_Server,policies::Logged> restart;
+  std::shared_ptr<cmd::Cmd<Restart_Server,policies::Logged>> restart;
+  def::GenCmdPtr_t p_cp;
   for (auto p : *qContainer)
   {
-    if (utilfunc::isInstanceOf<policies::Logged>(p))
+    // if (utilfunc::isInstanceOf<policies::Logged>(p))
+    if (utilfunc::isInstanceOf<cmd::Cmd<Restart_Server, policies::Logged>>(p))
     {
+      // restart = dynamic_cast<cmd::Cmd<Restart_Server,policies::Logged>&>(*p);
+      auto& temp = dynamic_cast< cmd::Cmd<Restart_Server, policies::Logged>& >(*p);
+      restart = std::make_shared<cmd::Cmd<Restart_Server, policies::Logged>>(temp);
       std::cout << "YES, this is a valid instance of Logged!\n";
       policies::Logged& l = dynamic_cast<policies::Logged&>(*p);
       l.setFileStream("./restart_log.txt");
@@ -184,8 +205,175 @@ void test_Logged_policy()
     {
       std::cout << "NO, this is not a valid instance of Logged!\n";
     }
-    // std::cout << "{" << (int)p->getS_ID() << " " << (int)p->getC_ID() << "}\n";
+    p_cp = p;
+    p = nullptr;
   }
+
+  std::cout << "{" << (int)restart->getS_ID() << " " << (int)restart->getC_ID() << "}\n";
+  restart->execute();
+
+  // add new policy to restart
+  auto p_logged_endcycle_cmd = 
+    std::make_shared<cmd::Cmd<Restart_Server, policies::Logged, policies::ExecAtEndOfCycle>>(restart->getS_ID(), restart->getC_ID());
+  p_logged_endcycle_cmd->init(restart->get_sptr_server(), restart->get_callback(), restart->get_req());
+  p_logged_endcycle_cmd->execute();
+
+  if (utilfunc::isInstanceOf<policies::ExecAtEndOfCycle>(p_logged_endcycle_cmd))
+  {
+    std::cout << "YES, this is a valid instance of ExecAtEndOfCycle!\n";
+  }
+  else
+  {
+    std::cout << "NO, this is not a valid instance of ExecAtEndOfCycle!\n";
+  }
+
+  // auto p_logged_dealloc_cmd = utilfunc::addPolicy< cmd::Cmd<Restart_Server, policies::Logged, policies::DeallocMemPrecond>, 
+  //                                                  cmd::Cmd<Restart_Server, policies::Logged> >(p_cp);
+
+  auto p_logged_dealloc_cmd = utilfunc::addPolicy< Restart_Server, policies::DeallocMemPrecond, policies::Logged, policies::ExecAtEndOfCycle >(p_logged_endcycle_cmd);
+  p_logged_dealloc_cmd->execute();
+
+  if (utilfunc::isInstanceOf<policies::DeallocMemPrecond>(p_logged_dealloc_cmd))
+  {
+    std::cout << "YES, this is a valid instance of DeallocMemPrecond!\n";
+  }
+  else
+  {
+    std::cout << "NO, this is not a valid instance of DeallocMemPrecond!\n";
+  }
+
+  if (utilfunc::isInstanceOf<policies::ExecAtEndOfCycle>(p_logged_dealloc_cmd))
+  {
+    std::cout << "YES, this is a valid instance of ExecAtEndOfCycle!\n";
+  }
+  else
+  {
+    std::cout << "NO, this is not a valid instance of ExecAtEndOfCycle!\n";
+  } 
+
+  std::cout << "{" << (int)p_logged_endcycle_cmd->getS_ID() << " " << (int)p_logged_endcycle_cmd->getC_ID() << "}\n";
+  policies::DeallocMemPrecond& deall = *p_logged_dealloc_cmd;
+  std::cout << "{" << (int)deall.getS_ID() << " " << (int)deall.getC_ID() << "}\n";
+  std::cout << "{" << (int)p_logged_dealloc_cmd->getS_ID() << " " << (int)p_logged_dealloc_cmd->getC_ID() << "}\n";
+  
+  deall.execute();
+  deall.dealloc();
+
+  std::cout << "END_TEST : " << __FUNCTION__ << std::endl;
+}
+
+void test_isInstanceOf_negative()
+{
+  std::cout << "START_TEST : " << __FUNCTION__ << std::endl;
+  std::shared_ptr<PiWatcherServer> p_piWatchserver = std::make_shared<PiWatcherServer>();
+  std::shared_ptr<Restart_Server> p_restartServer = std::make_shared<Restart_Server>();
+  p_piWatchserver->setup();
+  p_restartServer->setup();
+
+  ComQueueContainer* qContainer = new ComQueueContainer;
+  ComServerContainer* sContainer = new ComServerContainer{p_piWatchserver, p_restartServer};
+  ComManager cmdManager{sContainer, qContainer};
+
+  unsigned char buffer[256];
+  std::fill(buffer, buffer+sizeof(buffer), 0U);
+  qContainer->get_CmdQ().clear();
+  buffer[0] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
+  buffer[1] = cmd_format::t_CmdId::COMMAND_WATCHDOG;
+  buffer[2] = cmd_format::t_watchdog::REG_WATCHDOG_WATCH;
+  buffer[3] = static_cast<unsigned char>(60);
+
+  cmdManager.getByteStream(&buffer[0], sizeof(buffer));
+  int res = cmdManager.parseCommand();
+  if (res < 0)
+  {
+    std::cerr << "parse failed with res: " << res << std::endl;
+  }
+
+  for (auto p : *qContainer)
+  {
+    if (utilfunc::isInstanceOf<policies::Logged>(p))
+    {
+      std::cout << "YES, this is a valid instance of Logged!\n";
+    }
+    else
+    {
+      std::cout << "NO, this is not a valid instance of Logged!\n";
+    }
+    
+    std::cout << "{" << (int)p->getS_ID() << " " << (int)p->getC_ID() << "}\n"; 
+  }
+  
+  std::cout << "END_TEST : " << __FUNCTION__ << std::endl;
+}
+
+void test_copy()
+{
+  std::cout << "START_TEST : " << __FUNCTION__ << std::endl;
+  ComManager cmdManager = init();
+  ComQueueContainer& qContainer = cmdManager.getComQueueContainer();
+  ComServerContainer& sContainer = cmdManager.getServeContainer();
+  cmd::Cmd<Restart_Server,policies::Logged> cmd_restart_logged{2,1};
+  
+  {
+    cmd::Cmd<Restart_Server,policies::Logged> cmd_restart_logged2{2,1};
+    cmd_restart_logged2.init(sContainer.get_Restart_server(), &Restart_Server::immediatePiRestart, {});
+    cmd_restart_logged2.execute();
+    std::cout << "{" << (int)cmd_restart_logged2.getS_ID() << " " << (int)cmd_restart_logged2.getC_ID() << "}\n"; 
+
+    cmd_restart_logged = cmd_restart_logged2;
+  }
+  cmd_restart_logged.execute();
+  std::cout << "{" << (int)cmd_restart_logged.getS_ID() << " " << (int)cmd_restart_logged.getC_ID() << "}\n"; 
+  
+  cmd::Cmd<Restart_Server,policies::Logged> cmd_restart_logged3{cmd_restart_logged};
+  cmd_restart_logged3.execute();
+  std::cout << "{" << (int)cmd_restart_logged3.getS_ID() << " " << (int)cmd_restart_logged3.getC_ID() << "}\n"; 
+ 
+  cmd::Cmd<Restart_Server> cmd_restart{2,1};
+  cmd::Cmd<Restart_Server> cmd_restart2{2,1};
+  cmd_restart2.init(sContainer.get_Restart_server(), &Restart_Server::immediatePiRestart, {});
+
+  cmd_restart = cmd_restart2;
+  std::cout << "{" << (int)cmd_restart.getS_ID() << " " << (int)cmd_restart.getC_ID() << "}\n"; 
+  cmd_restart.execute();
+
+  cmd::Cmd<Restart_Server> cmd_restart3(cmd_restart);
+  std::cout << "{" << (int)cmd_restart3.getS_ID() << " " << (int)cmd_restart3.getC_ID() << "}\n"; 
+  cmd_restart3.execute();
+
+  cmd::Cmd<Restart_Server,policies::Logged> cmd_restart4{2,1};
+  cmd_restart4 = cmd_restart3;
+  std::cout << "{" << (int)cmd_restart4.getS_ID() << " " << (int)cmd_restart4.getC_ID() << "}\n"; 
+  cmd_restart4.execute();
+  if (utilfunc::isInstanceOf<policies::Logged>(cmd_restart4)) 
+  {
+    std::cout << "YES\n";
+    policies::Logged& l = cmd_restart4;
+    l.setFileStream("restart_log.txt");
+  }
+
+  cmd::Cmd<Restart_Server,policies::Logged> cmd_restart5(cmd_restart3);
+  std::cout << "{" << (int)cmd_restart5.getS_ID() << " " << (int)cmd_restart5.getC_ID() << "}\n"; 
+  cmd_restart5.execute();
+  if (utilfunc::isInstanceOf<policies::Logged>(cmd_restart5)) 
+  {
+    std::cout << "YES\n";
+    policies::Logged& l = cmd_restart5;
+    l.setFileStream("restart_log.txt");
+    l.execute();
+  }
+
+  cmd::Generic_Cmd& gen  = cmd_restart5;
+  cmd::Cmd<Restart_Server,policies::Logged> cmd_restart6;
+  cmd_restart6 = gen;
+  std::cout << "{" << (int)cmd_restart6.getS_ID() << " " << (int)cmd_restart6.getC_ID() << "}\n"; 
+  // this will generat std::bad_function_call!! (as expected)
+  // cmd_restart6.execute();
+
+  cmd::Cmd<Restart_Server,policies::Logged> cmd_restart7(gen);
+  std::cout << "{" << (int)cmd_restart7.getS_ID() << " " << (int)cmd_restart7.getC_ID() << "}\n"; 
+    // this will generat std::bad_function_call!! (as expected)
+  // cmd_restart7.execute();
 
   std::cout << "END_TEST : " << __FUNCTION__ << std::endl;
 }
@@ -195,6 +383,10 @@ int main()
   variousTests();
   std::cout << "====================================================\n";
   test_Logged_policy();
+  std::cout << "====================================================\n";
+  test_isInstanceOf_negative();
+  std::cout << "====================================================\n";
+  test_copy();
   std::cout << "====================================================\n";
 
   return 0;

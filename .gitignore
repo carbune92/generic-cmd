@@ -7,3 +7,4 @@ PiWatcher_Server.dSYM/
 main
 generic_cmd.zip
 *_log.txt
+valgrind-out.txt

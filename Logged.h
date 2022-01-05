@@ -5,10 +5,11 @@
 #include <iomanip>
 #include <ctime>
 #include <fstream>
+#include "Generic_Cmd.h"
 
 namespace policies
 {
-  class Logged
+  class Logged : virtual public cmd::Generic_Cmd
   {
     public:
     virtual void setFileStream(const char* filename);

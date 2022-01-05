@@ -20,7 +20,7 @@ namespace cmd
     Cmd() {}
     Cmd(def::t_SID sid, def::t_CID cid) : Generic_Cmd(sid, cid) {}
 
-    Cmd(const Cmd<S,P0,P...>& other) : Generic_Cmd{other.m_sid, other.m_cid}
+    Cmd(const Cmd<S,P0,P...>& other) : /*Generic_Cmd{other.m_sid, other.m_cid},*/ Generic_Cmd(other)/*, Cmd<S,P...>(other) */
     {
       m_sptr_server = other.m_sptr_server;
       m_callback = other.m_callback;
@@ -30,18 +30,25 @@ namespace cmd
       m_sid = other.m_sid;
     }
 
-    Cmd(const Cmd<S>& other) : Generic_Cmd{other.getS_ID(), other.getC_ID()}
+    Cmd(const Cmd<S>& other) : /*Generic_Cmd{other.getS_ID(), other.getC_ID()}*/ Generic_Cmd(other)
     {
       // if (typeid(S) == typeid(Cmd<S>::S))
       // {
-        m_sptr_server = other.get_sptr_server();
-        m_callback = other.get_callback();
-        m_resp = other.get_resp();
-        m_req = other.get_req();
-        m_cid = other.getC_ID();
-        m_sid = other.getS_ID();
+      m_sptr_server = other.get_sptr_server();
+      m_callback = other.get_callback();
+      m_resp = other.get_resp();
+      m_req = other.get_req();
+      m_cid = other.getC_ID();
+      m_sid = other.getS_ID();
       // }
     }
+
+    Cmd(const Generic_Cmd& other) : Generic_Cmd(other)
+    {
+      m_cid = other.getC_ID();
+      m_sid = other.getS_ID();
+    }
+
 
     Cmd(Cmd<S,P0,P...>&& other)
     {
@@ -54,7 +61,8 @@ namespace cmd
     // }
 
     Cmd<S,P0,P...>& operator=(const Cmd<S,P0,P...>& other)
-    {
+    { 
+      this->Generic_Cmd::operator=(other);
       m_sptr_server = other.m_sptr_server;
       m_callback = other.m_callback;
       m_resp = other.m_resp;
@@ -66,10 +74,19 @@ namespace cmd
 
     Cmd<S,P0,P...>& operator=(const Cmd<S>& other)
     {
+      this->Generic_Cmd::operator=(other);
       m_sptr_server = other.get_sptr_server();
       m_callback = other.get_callback();
       m_resp = other.get_resp();
       m_req = other.get_req();
+      m_cid = other.getC_ID();
+      m_sid = other.getS_ID();
+      return *this;
+    }
+
+    Cmd<S,P0,P...>& operator=(const Generic_Cmd& other)
+    {
+      this->Generic_Cmd::operator=(other);
       m_cid = other.getC_ID();
       m_sid = other.getS_ID();
       return *this;
@@ -132,6 +149,11 @@ namespace cmd
 
     virtual ~Cmd() = default;
 
+    std::shared_ptr<S> get_sptr_server() const { return m_sptr_server; }
+    def::Call_t<S> get_callback() const { return m_callback; }
+    def::data_t get_resp() const { return m_resp; }
+    def::data_t get_req() const { return m_req; }
+
     private:
     std::shared_ptr<S> m_sptr_server;
     def::Call_t<S> m_callback;
@@ -152,7 +174,7 @@ namespace cmd
     Cmd() {}
     Cmd(def::t_SID  sid, def::t_CID cid) : Generic_Cmd(sid, cid) {}
 
-    Cmd(const Cmd<S>& other)
+    Cmd(const Cmd<S>& other) : /*Generic_Cmd(other.m_sid, other.m_cid)*/ Generic_Cmd(other)
     {
       m_sptr_server = other.m_sptr_server;
       m_callback = other.m_callback;
@@ -160,13 +182,28 @@ namespace cmd
       m_req = other.m_req;
     }
 
+    Cmd(const Generic_Cmd& other) : Generic_Cmd(other)
+    {
+      m_cid = other.getC_ID();
+      m_sid = other.getS_ID();
+    }
+
     Cmd(Cmd<S>&& other)
     {
       this->operator=(other);
     }
 
+    Cmd<S>& operator=(const Generic_Cmd& other)
+    {
+      this->Generic_Cmd::operator=(other);
+      m_cid = other.getC_ID();
+      m_sid = other.getS_ID();
+      return *this;
+    }
+
     Cmd<S>& operator=(const Cmd<S>& other)
     {
+      this->Generic_Cmd::operator=(other);
       m_sptr_server = other.m_sptr_server;
       m_callback = other.m_callback;
       m_resp = other.m_resp;
@@ -245,9 +282,74 @@ namespace utilfunc
   template <typename T>
   inline bool isInstanceOf(def::GenCmdPtr_t p)
   {
-    return ( (typeid(*p) == typeid(cmd::Cmd<Restart_Server, T>))  ||
-             (typeid(*p) == typeid(cmd::Cmd<PiWatcherServer, T>))
-          );
+    // return ( (typeid(*p) == typeid(cmd::Cmd<Restart_Server, T>))  ||
+    //          (typeid(*p) == typeid(cmd::Cmd<PiWatcherServer, T>))
+    //       );
+
+    bool res = true;
+    try
+    { 
+      T& ref = dynamic_cast<T&>(*p);
+    }
+    catch(std::bad_cast)
+    {
+      res = false;
+    }
+
+    return res;
+  }
+
+  template <typename T>
+  inline bool isInstanceOf(cmd::Generic_Cmd& p)
+  {
+    bool res = true;
+    try
+    { 
+      T& ref = dynamic_cast<T&>(p);
+    }
+    catch(std::bad_cast)
+    {
+      res = false;
+    }
+
+    return res;
+  }
+
+  // template <typename SRV>
+  inline bool hasServerType(def::t_SID sid, def::t_CID cid, def::GenCmdPtr_t p)
+  {
+    return ( (sid == p->getS_ID()) && (cid == p->getC_ID()) );
+  }
+
+  template <typename DEST, typename SRC>
+  std::shared_ptr<DEST> convertTo(def::GenCmdPtr_t p)
+  {
+    std::shared_ptr<DEST> p_res{};
+
+    if (isInstanceOf<SRC>(p))
+    {
+      auto deriv = dynamic_cast<SRC&>(*p);
+      p_res = std::make_shared<DEST>(deriv.getS_ID(), deriv.getC_ID());
+      p_res->init(deriv.get_sptr_server(), deriv.get_callback(), deriv.get_req());
+    }
+
+    return p_res;
+  }
+
+  template <typename SRV, typename N_POL, typename... POL>
+  std::shared_ptr<cmd::Cmd<SRV,POL ...,N_POL>> addPolicy(def::GenCmdPtr_t p)
+  {
+    std::shared_ptr<cmd::Cmd<SRV,POL...,N_POL>> p_res{};
+
+    if (isInstanceOf<cmd::Cmd<SRV,POL...>>(p))
+    {
+      auto& deriv = dynamic_cast< cmd::Cmd<SRV,POL...>& >(*p);
+      // std::cout << "{" << (int)deriv,getS_ID() << " " << (int)deriv.getC_ID() << "}\n";
+      p_res = std::make_shared<cmd::Cmd<SRV,POL ...,N_POL>>(deriv.getS_ID(), deriv.getC_ID());
+      p_res->init(deriv.get_sptr_server(), deriv.get_callback(), deriv.get_req());
+    }
+
+    return p_res;
   }
 };
 
