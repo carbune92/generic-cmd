@@ -11,6 +11,6 @@ void Restart_Server::setup()
 def::data_t Restart_Server::immediatePiRestart(def::data_t req)
 {
   std::cout << "Restart_Server::immediatePiRestart" << '\n';
-  system("sudo reboot -h now");
+  // system("sudo reboot -h now");
   return def::data_t{};
 }
