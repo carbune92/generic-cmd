@@ -3,3 +3,5 @@
 void PingServer::setup()
 {
 }
+
+//TODO inject dependencies for RDF module for sending

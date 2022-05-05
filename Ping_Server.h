@@ -7,6 +7,9 @@ class PingServer
 {
   public:
     void setup();
+
+    //TODO inject dependencies for RDF module for sending
+    
     
   private:
     int m_ack = -1;
