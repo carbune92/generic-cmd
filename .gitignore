@@ -8,3 +8,6 @@ main
 generic_cmd.zip
 *_log.txt
 valgrind-out.txt
+a.out
+.swp
+build_res.log

@@ -49,7 +49,6 @@ namespace cmd
       m_sid = other.getS_ID();
     }
 
-
     Cmd(Cmd<S,P0,P...>&& other)
     {
       this->operator=(other);
@@ -348,6 +347,11 @@ namespace utilfunc
       p_res = std::make_shared<cmd::Cmd<SRV,POL ...,N_POL>>(deriv.getS_ID(), deriv.getC_ID());
       p_res->init(deriv.get_sptr_server(), deriv.get_callback(), deriv.get_req());
     }
+    else
+    {
+      std::cerr << "Error instanceOf\n";
+    }
+    //TODO treat else of instanceOf
 
     return p_res;
   }

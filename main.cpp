@@ -1,14 +1,19 @@
 #include "PiWatcher_Server.h"
 #include "Restart_Server.h"
+#include "Ping_Server.h"
 // #include "Cmd.h"
 
 #include "ComServerContainer.h"
 #include "ComManager.h"
 #include "ComQueueContainer.h"
 
+#include "RFD900_Stubs.h"
+
 #include <vector>
 #include <memory> 
 #include <iostream>
+
+RFD900_Modem modem{};
 
 ComManager init()
 {
@@ -16,9 +21,12 @@ ComManager init()
   std::shared_ptr<Restart_Server> p_restartServer = std::make_shared<Restart_Server>();
   p_piWatchserver->setup();
   p_restartServer->setup();
+  
+  std::shared_ptr<PingServer> p_pingServer = std::make_shared<PingServer>(modem);
+  p_pingServer->setup();
 
   ComQueueContainer* qContainer = new ComQueueContainer;
-  ComServerContainer* sContainer = new ComServerContainer{p_piWatchserver, p_restartServer};
+  ComServerContainer* sContainer = new ComServerContainer{p_piWatchserver, p_restartServer, p_pingServer};
   ComManager cmdManager{sContainer, qContainer};
   
   return cmdManager;
@@ -45,9 +53,11 @@ void variousTests()
 
   p_gen[0]->execute();
   p_gen[1]->execute();
+  
+  std::shared_ptr<PingServer> p_pingServer = std::make_shared<PingServer>(modem);
 
   ComQueueContainer* qContainer = new ComQueueContainer;
-  ComServerContainer* sContainer = new ComServerContainer{p_server, p_restart_server};
+  ComServerContainer* sContainer = new ComServerContainer{p_server, p_restart_server, p_pingServer};
 
   ComManager cmdManager{sContainer, qContainer};
 
@@ -168,9 +178,11 @@ void test_Logged_policy()
   std::shared_ptr<Restart_Server> p_restartServer = std::make_shared<Restart_Server>();
   p_piWatchserver->setup();
   p_restartServer->setup();
+  
+  std::shared_ptr<PingServer> p_pingServer = std::make_shared<PingServer>(modem);
 
   ComQueueContainer* qContainer = new ComQueueContainer;
-  ComServerContainer* sContainer = new ComServerContainer{p_piWatchserver, p_restartServer};
+  ComServerContainer* sContainer = new ComServerContainer{p_piWatchserver, p_restartServer, p_pingServer};
   ComManager cmdManager{sContainer, qContainer};
 
   qContainer->get_CmdQ().clear();
@@ -269,9 +281,11 @@ void test_isInstanceOf_negative()
   std::shared_ptr<Restart_Server> p_restartServer = std::make_shared<Restart_Server>();
   p_piWatchserver->setup();
   p_restartServer->setup();
+  
+  std::shared_ptr<PingServer> p_pingServer = std::make_shared<PingServer>(modem);
 
   ComQueueContainer* qContainer = new ComQueueContainer;
-  ComServerContainer* sContainer = new ComServerContainer{p_piWatchserver, p_restartServer};
+  ComServerContainer* sContainer = new ComServerContainer{p_piWatchserver, p_restartServer, p_pingServer};
   ComManager cmdManager{sContainer, qContainer};
 
   unsigned char buffer[256];
@@ -378,6 +392,90 @@ void test_copy()
   std::cout << "END_TEST : " << __FUNCTION__ << std::endl;
 }
 
+void test_ping()
+{
+  std::cout << "START_TEST : " << __FUNCTION__ << std::endl;
+  ComManager cmdManager = init();
+  ComQueueContainer& qContainer = cmdManager.getComQueueContainer();
+  ComServerContainer& sContainer = cmdManager.getServeContainer();
+  
+  // cmd::Cmd<PingServer> cmd_ping{3,1};
+  auto cmd_ping = std::make_shared<cmd::Cmd<PingServer>>(3,1);
+  
+  // for datetime: 21-05-2022 22-05-59|
+  
+  std::vector<uint8_t> a_param  = {'2','1','0','5','2','0','2','2','2','2','0','5','5','9'};
+  int ack = 250;
+  a_param.push_back(static_cast<uint8_t>((ack >> 24) & 0xff));
+  a_param.push_back(static_cast<uint8_t>((ack >> 16) & 0xff));
+  a_param.push_back(static_cast<uint8_t>((ack >> 8) & 0xff));
+  a_param.push_back(static_cast<uint8_t>(ack & 0xff));
+  
+  cmd_ping->init(sContainer.get_Ping_server(), &PingServer::addToModemQueue, a_param);
+  cmd_ping->execute();
+  
+  std::ostringstream ss;
+  for (auto p : modem.getPingQueue())
+  {
+    std::cout << p.recv_tm << " : " << p.recv_ack << std::endl;
+    ss << p.recv_tm << " : " << p.recv_ack << std::endl;
+  }
+  
+  auto p_logged_ping_cmd = utilfunc::addPolicy<PingServer, policies::Logged>(cmd_ping);
+  
+  if (p_logged_ping_cmd)
+  {
+    const char pinglog[] = "./ping_log.txt";
+    policies::Logged& l = *p_logged_ping_cmd;
+    l.setFileStream(pinglog);
+    l.log(ss.str());
+  }
+  
+  p_logged_ping_cmd->execute();
+  for (auto p : modem.getPingQueue())
+  {
+    std::cout << p.recv_tm << " : " << p.recv_ack << std::endl;
+  }
+  
+  auto p_copy = p_logged_ping_cmd;
+  p_copy->execute();
+  
+  for (auto p : modem.getPingQueue())
+  {
+    std::cout << p.recv_tm << " : " << p.recv_ack << std::endl;
+  }
+  
+  auto pingServer = sContainer.get_Ping_server();
+  std::cout << pingServer->req2str( p_copy->get_req() ) << std::endl;
+  
+  std::shared_ptr<policies::Logged> p_l2 = p_copy;
+  p_l2->setFileStream("./ping_log.txt");
+  
+  std::string pingstr= pingServer->req2str(p_copy->get_req());
+  p_l2->log(pingstr);
+}
+
+void test_cmptm()
+{
+  std::string tm1{"18-12-1992 03-45-30"};
+  std::string tm2{"18-12-1992 01-45-30"};
+  std::cout << cmptm(tm1,tm2) << std::endl;
+  
+  tm1 = "18-12-1992 03-45-30";
+  tm2 = "18-12-1992 05-45-30";
+  std::cout << cmptm(tm1,tm2) << std::endl;
+  
+  tm1 = "11-05-1999 03-45-30";
+  tm2 = "18-12-1992 03-45-30";
+  std::cout << cmptm(tm1,tm2) << std::endl;
+  
+  tm1 = "11-05-1999 03-45-30";
+  tm2 = "18-12-2022 23-11-30";
+  std::cout << cmptm(tm1,tm2) << std::endl;
+}
+
+
+
 int main()
 {
   variousTests();
@@ -388,6 +486,10 @@ int main()
   std::cout << "====================================================\n";
   test_copy();
   std::cout << "====================================================\n";
-
+  test_ping();
+  std::cout << "====================================================\n";
+  test_cmptm();
+  std::cout << "====================================================\n";
+  
   return 0;
 }

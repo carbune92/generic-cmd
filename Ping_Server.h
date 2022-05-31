@@ -2,18 +2,40 @@
 #define __PING_SERVER_H__
 
 #include "common.h"
+#include <map>
+#include <string>
+#include <functional>
+
+#include "RFD900_Stubs.h"
+
+#include <ctime>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+
+bool cmptm(const std::string&, const std::string&);
+
+// using MapFunctor_t = std::function<bool(std::string,std::string)>;
 
 class PingServer
 {
   public:
+    PingServer(RFD900_Modem& _modem);
+    PingServer() = delete;
     void setup();
-
-    //TODO inject dependencies for RDF module for sending
-    
+    def::data_t addToModemQueue(def::data_t req);
+    std::string req2str(def::data_t req) const;
     
   private:
-    int m_ack = -1;
+    void addToQueue(std::string recv_tm, int recv_ack);
     
+    int m_last_ack = -1;
+    std::map< std::string, 
+              int,
+              std::function<bool(const std::string&, const std::string&)>
+            > m_ackTable;
+           
+    RFD900_Modem& modem;
 };
 
 #endif
