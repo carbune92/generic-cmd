@@ -14,14 +14,16 @@ namespace cmd
       
     public:
       virtual void execute() = 0;
+      virtual def::data_t get_req() const = 0;
 
-      virtual def::t_SID getS_ID() const;
-      virtual def::t_CID getC_ID() const;
+      def::t_SID getS_ID() const;
+      def::t_CID getC_ID() const;
       virtual ~Generic_Cmd() = default;
 
     protected:
       def::t_SID m_sid;
       def::t_CID m_cid;
+      def::data_t m_req;
   };
 }
 

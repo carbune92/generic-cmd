@@ -11,7 +11,7 @@ class RFD900_Modem
       pingQueue.push_back(pingResp);
     }
     
-    const std::vector<t_PingInfo>& getPingQueue() const
+    std::vector<t_PingInfo>& getPingQueue()
     {
       return pingQueue;
     }

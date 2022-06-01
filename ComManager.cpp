@@ -79,7 +79,25 @@ int ComManager::parseCommand()
         }
         default:
         {
-          std::cerr << "ComManager::parseCommand: unknown cid : " << cid << std::endl;
+          std::cerr << "ComManager::parseCommand: unknown cid from SERViCE_COMMAND_DISTRIBUTION : " << cid << std::endl;
+          res = -1;
+        }
+      }
+    }
+    else if (t_ServiceId::DIAGNOSTICS == sid)
+    {
+      def::t_CID cid = *(beginCmdIt+1);
+      
+      switch(cid)
+      {
+        case t_CmdId::COMMAND_PING:
+        {
+          res = parsePingCmd(beginCmdIt+2, sepIt, def::e_Ping);
+          break;
+        }
+        default:
+        {
+          std::cerr << "ComManager::parseCommand: unknown cid from DIAGNOSTICS : " << cid << std::endl;
           res = -1;
         }
       }
@@ -87,7 +105,7 @@ int ComManager::parseCommand()
     else
     {
       res = -4;
-      std::cerr << "ComManager::parseCommand: not a service command distribution service, sid = " << sid << ", res = " << res << std::endl;
+      std::cerr << "ComManager::parseCommand: unknown sid = " << sid << ", res = " << res << std::endl;
     }
 
     if (sepIt == m_byteStream.end())
@@ -175,6 +193,35 @@ int ComManager::parseWatchdogCmd(def::data_t::iterator itBegin, def::data_t::ite
     }
 
     itsCommContainer->push_back(p, cmdType);
+  }
+  
+  return res;
+}
+
+int ComManager::parsePingCmd(def::data_t::iterator itBegin, def::data_t::iterator itEnd, def::t_CmdTypes cmdType)
+{
+  int res = 0;
+  
+  if (itBegin == itEnd)
+  {
+    std::cerr << "ComManager::parsePingCmd invalid iterators" << std::endl;
+    res = -2;
+  }
+  else
+  {
+    def::data_t timedate_param{};
+    def::data_t ack_param{};
+    auto p = std::make_shared<cmd::Cmd<PingServer>>(t_ServiceId::DIAGNOSTICS, t_CmdId::COMMAND_PING);
+    
+    timedate_param.insert(timedate_param.begin(), itBegin, itBegin+t_ping::NR_BYTES_TD);
+    ack_param.insert(ack_param.begin(), itBegin+t_ping::NR_BYTES_TD, itBegin+t_ping::NR_BYTES_TD+t_ping::NR_BYTES_ACK);
+    
+    def::data_t params{timedate_param};
+    params.insert(params.end(), ack_param.begin(), ack_param.end());
+    
+    p->init(itsServContainer->get_Ping_server(), &PingServer::addToModemQueue, params);
+    
+    itsCommContainer->push_back(utilfunc::addPolicy<PingServer,policies::Logged>(p), cmdType);
   }
   
   return res;

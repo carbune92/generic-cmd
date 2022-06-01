@@ -36,6 +36,14 @@ class PingServer
             > m_ackTable;
            
     RFD900_Modem& modem;
+    
+    
+    // TODO server classes:
+    /*
+      - make an interface for all server classes
+      - add in the interface the req2str for logging purposes
+      - each command will also return the interface object for its server class so that it can call the 'req2str' method
+    */
 };
 
 #endif

@@ -85,7 +85,7 @@ std::string PingServer::req2str(def::data_t req) const
 
 void PingServer::addToQueue(std::string recv_tm, int recv_ack)
 {
-  if (recv_ack >= 0 && recv_ack < 256)
+  if (recv_ack >= 0 && recv_ack < 1000)
   {  
     t_PingInfo pingInfo{recv_tm, recv_ack};
     modem.addToPingQueue( std::move(pingInfo) );

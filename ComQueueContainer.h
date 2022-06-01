@@ -25,6 +25,7 @@ class ComQueueContainer
   std::vector<def::GenCmdPtr_t> m_endOfCycle_cmd;
   std::vector<def::GenCmdPtr_t> m_deallocPrecond_cmd;
   std::vector<def::GenCmdPtr_t> m_logged_cmd;
+  std::vector<def::GenCmdPtr_t> m_ping_cmd;
 };
 
 #endif 

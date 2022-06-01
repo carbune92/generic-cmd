@@ -16,9 +16,14 @@ namespace cmd
   class Cmd<S,P0,P...> : public P0, public Cmd<S,P...>
   {
     public:
+    using Generic_Cmd::m_cid;
+    using Generic_Cmd::m_sid;
+    using Generic_Cmd::m_req;
+    
     friend Cmd<S>;
     Cmd() {}
-    Cmd(def::t_SID sid, def::t_CID cid) : Generic_Cmd(sid, cid) {}
+    Cmd(def::t_SID sid, def::t_CID cid) : Generic_Cmd(sid, cid) 
+    {}
 
     Cmd(const Cmd<S,P0,P...>& other) : /*Generic_Cmd{other.m_sid, other.m_cid},*/ Generic_Cmd(other)/*, Cmd<S,P...>(other) */
     {
@@ -151,16 +156,16 @@ namespace cmd
     std::shared_ptr<S> get_sptr_server() const { return m_sptr_server; }
     def::Call_t<S> get_callback() const { return m_callback; }
     def::data_t get_resp() const { return m_resp; }
-    def::data_t get_req() const { return m_req; }
+    def::data_t get_req() const override { return m_req; }
 
     private:
     std::shared_ptr<S> m_sptr_server;
     def::Call_t<S> m_callback;
     def::data_t m_resp;
-    def::data_t m_req;
+    // def::data_t m_req;
     
-    def::t_SID m_sid;
-    def::t_CID m_cid;
+    // def::t_SID m_sid;
+    // def::t_CID m_cid;
   };
 
   template <typename S>
@@ -255,12 +260,12 @@ namespace cmd
     std::shared_ptr<S> get_sptr_server() const { return m_sptr_server; }
     def::Call_t<S> get_callback() const { return m_callback; }
     def::data_t get_resp() const { return m_resp; }
-    def::data_t get_req() const { return m_req; }
+    def::data_t get_req() const override { return m_req; }
     private:
     std::shared_ptr<S> m_sptr_server;
     def::Call_t<S> m_callback;
     def::data_t m_resp;
-    def::data_t m_req;
+    // def::data_t m_req;
   };
 }
 
