@@ -482,6 +482,7 @@ void test_decode_ping()
   ComQueueContainer& qContainer = cmdManager.getComQueueContainer();
   ComServerContainer& sContainer = cmdManager.getServeContainer();
   
+  std::shared_ptr<PingServer> p_pingS = sContainer.get_Ping_server();
   
   std::vector<uint8_t> a_param{cmd_format::t_ServiceId::DIAGNOSTICS, cmd_format::t_CmdId::COMMAND_PING};
   a_param.insert(a_param.end(), {'0','1','0','6','2','0','2','2','1','2','1','3','0','5'});
@@ -507,7 +508,7 @@ void test_decode_ping()
         // auto& ping = dynamic_cast<cmd::Cmd<PingServer,policies::Logged>&>(*p);
         l.setFileStream("./ping_log.txt");
         
-        std::string logStr = sContainer.get_Ping_server()->req2str(p->get_req());
+        std::string logStr = p_pingS->req2str(p->get_req());
 
         // std::string logStr = sContainer.get_Ping_server()->req2str(ping.get_req());
         l.log(logStr);
