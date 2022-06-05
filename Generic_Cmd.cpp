@@ -2,13 +2,14 @@
 
 namespace cmd
 {
-  Generic_Cmd::Generic_Cmd() : m_cid{}, m_sid{}
+  Generic_Cmd::Generic_Cmd() : m_cid{}, m_sid{}, m_req{}
   {
   }
 
   Generic_Cmd::Generic_Cmd(def::t_SID sid, def::t_CID cid) : 
     m_cid{cid},
-    m_sid{sid}
+    m_sid{sid},
+    m_req{}
   {
   }
 

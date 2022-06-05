@@ -20,6 +20,7 @@ class ComManager
   private:
   int parseRebootCmd(def::data_t::iterator itBegin, def::data_t::iterator itEnd, def::t_CmdTypes cmdType = def::e_CmdDefault);
   int parseWatchdogCmd(def::data_t::iterator itBegin, def::data_t::iterator itEnd, def::t_CmdTypes cmdType = def::e_CmdDefault);
+  int parsePingCmd(def::data_t::iterator itBegin, def::data_t::iterator itEnd, def::t_CmdTypes cmdType = def::e_CmdDefault);
   ComServerContainer* itsServContainer;
   ComQueueContainer* itsCommContainer;
   def::data_t m_byteStream;

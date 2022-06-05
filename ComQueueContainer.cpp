@@ -16,6 +16,10 @@ std::vector<def::GenCmdPtr_t>& ComQueueContainer::get_CmdQ(def::t_CmdTypes cmdTy
     {
       return m_logged_cmd;
     }
+    case def::e_Ping:
+    {
+      return m_ping_cmd;
+    }
     case def::e_CmdDefault:
     default:
     {
@@ -45,6 +49,11 @@ void ComQueueContainer::push_back(def::GenCmdPtr_t p, def::t_CmdTypes cmdType)
       m_logged_cmd.push_back(p);
       break;
     }
+    case def::e_Ping:
+    {
+      m_ping_cmd.push_back(p);
+      break;
+    }
     case def::e_CmdDefault:
     default:
     {
@@ -66,7 +75,7 @@ CmdQueueIter ComQueueContainer::end()
 
 CmdQueueIter ComQueueContainer::begin(def::t_CmdTypes cmdType)
 {
-  CmdQueueIter iter = m_default_cmd.end();
+  CmdQueueIter iter = m_default_cmd.begin();
   switch (cmdType)
   {
     case def::e_CmdDeallocMem:
@@ -84,6 +93,12 @@ CmdQueueIter ComQueueContainer::begin(def::t_CmdTypes cmdType)
     case def::e_Logged:
     {
       iter = m_logged_cmd.begin();
+      break;
+    }
+    
+    case def::e_Ping:
+    {
+      iter = m_ping_cmd.begin();
       break;
     }
     
@@ -116,6 +131,12 @@ CmdQueueIter ComQueueContainer::end(def::t_CmdTypes cmdType)
     case def::e_Logged:
     {
       iter = m_logged_cmd.end();
+      break;
+    }
+    
+    case def::e_Ping:
+    {
+      iter = m_ping_cmd.end();
       break;
     }
   
