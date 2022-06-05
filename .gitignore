@@ -11,3 +11,4 @@ valgrind-out.txt
 a.out
 .swp
 build_res.log
+files_that_need_to_be_integrated.txt
