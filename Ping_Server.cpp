@@ -13,10 +13,10 @@ bool cmptm(const std::string& tm1, const std::string& tm2)
   
   double diff = difftime(mktime(&dt1),mktime(&dt2));
   
-  return (diff < 0.0)? true : false;
+  return (diff <= 0.0)? true : false;
 }
 
-PingServer::PingServer(RFD900_Modem& _modem) :
+PingServer::PingServer(Comm_RFD868& _modem) :
   modem{_modem},
   m_ackTable{cmptm}
 {
@@ -85,15 +85,51 @@ std::string PingServer::req2str(def::data_t req) const
 
 void PingServer::addToQueue(std::string recv_tm, int recv_ack)
 {
+  std::cout << "recv_tm: " << recv_tm << ", recv_ack: " << recv_ack << std::endl;
   if (recv_ack >= 0 && recv_ack < 1000)
-  {  
+  { 
     t_PingInfo pingInfo{recv_tm, recv_ack};
-    modem.addToPingQueue( std::move(pingInfo) );
+    bool res = timedateOfPingResp(pingInfo);
+    std::cout << " res of timedateOfPingResp: " << (int)res << std::endl;
+    if (res)
+    {
+      // std::cout << "Ping cmd timedate is actual!\n";
+      modem.addToPingQueue( std::move(pingInfo) );
     
-    m_ackTable.insert( {recv_tm, recv_ack} );
+      m_ackTable.insert( {recv_tm, recv_ack} );
+    }
+    else
+    {
+      // TODO update error timedate greater that initial timedate!
+    }  
   } 
   else
   {
     //TODO the proper reaction - maybe send a response with ack -1
   }
+}
+
+
+bool PingServer::timedateOfPingResp(t_PingInfo& p)
+{
+  bool res = false;
+  
+  std::time_t t = std::time(nullptr);
+  const char dt_format[] {"%d-%m-%Y %H-%M-%S"};
+  
+  // char buffer[15];
+  // strftime(&buffer[0], sizeof(buffer), dt_format.c_str(), std::localtime(&t));
+  
+  std::ostringstream oss;
+  std::tm *tm = std::localtime(&t);
+  oss << std::put_time(tm, dt_format);
+  
+  res = cmptm(p.recv_tm, oss.str());
+  
+  if (res)
+  {
+    p.recv_tm = oss.str();
+  }
+  
+  return res;
 }
