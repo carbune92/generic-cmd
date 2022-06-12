@@ -7,13 +7,14 @@
 #include "ComManager.h"
 #include "ComQueueContainer.h"
 
-#include "RFD900_Stubs.h"
+#include "Comm_RFD868.h"
 
 #include <vector>
 #include <memory> 
 #include <iostream>
+#include <cassert>
 
-RFD900_Modem modem{};
+Comm_RFD868 modem{};
 
 ComManager init()
 {
@@ -536,6 +537,39 @@ void test_decode_ping()
   }
 }
 
+void test_decode_ping_wrong_td()
+{
+  std::cout << "START_TEST : " << __FUNCTION__ << std::endl;
+  ComManager cmdManager = init();
+  ComQueueContainer& qContainer = cmdManager.getComQueueContainer();
+  ComServerContainer& sContainer = cmdManager.getServeContainer();
+  
+  std::shared_ptr<PingServer> p_pingS = sContainer.get_Ping_server();
+  
+  std::vector<uint8_t> a_param{cmd_format::t_ServiceId::DIAGNOSTICS, cmd_format::t_CmdId::COMMAND_PING};
+  
+  // insert a future timedate than the current time: 20 June 2022...
+  a_param.insert(a_param.end(), {'2','0','0','6','2','0','2','2','1','2','1','3','0','5'});
+  int ack = 400;
+  a_param.push_back(static_cast<uint8_t>((ack >> 24) & 0xff));
+  a_param.push_back(static_cast<uint8_t>((ack >> 16) & 0xff));
+  a_param.push_back(static_cast<uint8_t>((ack >> 8) & 0xff));
+  a_param.push_back(static_cast<uint8_t>(ack & 0xff));
+  
+  qContainer.get_CmdQ(def::e_Ping).clear();
+  modem.getPingQueue().clear();
+  cmdManager.getByteStream(&a_param[0], a_param.size());
+  cmdManager.parseCommand();
+  
+  assert(qContainer.get_CmdQ(def::e_Ping).size() == 1);
+  
+  std::vector<def::GenCmdPtr_t>::iterator it = qContainer.get_CmdQ(def::e_Ping).begin();
+  (*it)->execute();
+  
+  assert(modem.getPingQueue().size() == 0);
+  std::cout << "Cmd queue is empty because the timedate in the stream is a future one!\n";
+}
+
 
 
 int main()
@@ -553,6 +587,8 @@ int main()
   test_cmptm();
   std::cout << "====================================================\n";
   test_decode_ping();
+  std::cout << "====================================================\n";
+  test_decode_ping_wrong_td();
   std::cout << "====================================================\n";
   return 0;
 }

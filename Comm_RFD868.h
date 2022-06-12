@@ -3,7 +3,7 @@
 
 #include <vector>
 
-class RFD900_Modem
+class Comm_RFD868
 {
   public:
     void addToPingQueue(t_PingInfo&& pingResp)

@@ -6,7 +6,7 @@
 #include <string>
 #include <functional>
 
-#include "RFD900_Stubs.h"
+#include "Comm_RFD868.h"
 
 #include <ctime>
 #include <iomanip>
@@ -20,14 +20,16 @@ bool cmptm(const std::string&, const std::string&);
 class PingServer
 {
   public:
-    PingServer(RFD900_Modem& _modem);
+    PingServer(Comm_RFD868& _modem);
     PingServer() = delete;
     void setup();
     def::data_t addToModemQueue(def::data_t req);
     std::string req2str(def::data_t req) const;
+
     
   private:
     void addToQueue(std::string recv_tm, int recv_ack);
+    static bool timedateOfPingResp(t_PingInfo& p);
     
     int m_last_ack = -1;
     std::map< std::string, 
@@ -35,7 +37,7 @@ class PingServer
               std::function<bool(const std::string&, const std::string&)>
             > m_ackTable;
            
-    RFD900_Modem& modem;
+    Comm_RFD868& modem;
     
     
     // TODO server classes:
