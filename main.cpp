@@ -408,8 +408,8 @@ void test_ping()
   
   std::vector<uint8_t> a_param  = {'2','1','0','5','2','0','2','2','2','2','0','5','5','9'};
   int ack = 250;
-  a_param.push_back(static_cast<uint8_t>((ack >> 24) & 0xff));
-  a_param.push_back(static_cast<uint8_t>((ack >> 16) & 0xff));
+  // a_param.push_back(static_cast<uint8_t>((ack >> 24) & 0xff));
+  // a_param.push_back(static_cast<uint8_t>((ack >> 16) & 0xff));
   a_param.push_back(static_cast<uint8_t>((ack >> 8) & 0xff));
   a_param.push_back(static_cast<uint8_t>(ack & 0xff));
   
@@ -487,9 +487,9 @@ void test_decode_ping()
   
   std::vector<uint8_t> a_param{cmd_format::t_ServiceId::DIAGNOSTICS, cmd_format::t_CmdId::COMMAND_PING};
   a_param.insert(a_param.end(), {'0','1','0','6','2','0','2','2','1','2','1','3','0','5'});
-  int ack = 123;
-  a_param.push_back(static_cast<uint8_t>((ack >> 24) & 0xff));
-  a_param.push_back(static_cast<uint8_t>((ack >> 16) & 0xff));
+  int ack = 923;
+  // a_param.push_back(static_cast<uint8_t>((ack >> 24) & 0xff));
+  // a_param.push_back(static_cast<uint8_t>((ack >> 16) & 0xff));
   a_param.push_back(static_cast<uint8_t>((ack >> 8) & 0xff));
   a_param.push_back(static_cast<uint8_t>(ack & 0xff));
   
