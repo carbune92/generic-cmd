@@ -48,6 +48,12 @@ int ComManager::parseCommand()
   int res = 0;
   def::data_t::iterator beginCmdIt = m_byteStream.begin();
   def::data_t::iterator sepIt = std::find(m_byteStream.begin(), m_byteStream.end(), CMD_SEPARATOR);
+  
+  // for (auto b : m_byteStream)
+  // {
+  //   std::cout << std::hex << (int)b << " ";
+  // }
+  // std::cout << std::endl;
   // if (m_byteStream.end() == sepIt)
   // {
   //   res = -5;
@@ -105,7 +111,7 @@ int ComManager::parseCommand()
     else
     {
       res = -4;
-      std::cerr << "ComManager::parseCommand: unknown sid = " << sid << ", res = " << res << std::endl;
+      std::cerr << "ComManager::parseCommand: unknown sid = " << (int)sid << ", res = " << res << std::endl;
     }
 
     if (sepIt == m_byteStream.end())

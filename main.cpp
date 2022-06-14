@@ -14,6 +14,8 @@
 #include <iostream>
 #include <cassert>
 
+#define PASSED_M(msg) (std::cout << "\033[1;32mPASSED\033[0m : " msg "\n") 
+
 Comm_RFD868 modem{};
 
 ComManager init()
@@ -72,16 +74,15 @@ void variousTests()
   std::cout << (int)smen.getC_ID() << '\n';
 
   qContainer->get_CmdQ().clear();
-  unsigned char buffer[256];
+  unsigned char buffer[256] = {{0}};
   buffer[0] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
   buffer[1] = cmd_format::t_CmdId::COMMAND_IMMEDIATE_REBOOT;
   cmdManager.getByteStream(&buffer[0], sizeof(buffer));
   int res = cmdManager.parseCommand();
-  if (res < 0)
-  {
-    std::cerr << "parse failed with res: " << res << std::endl;
-  }
-
+  std::cout << "Res parse cmd reboot: " << res << std::endl;
+  assert(res >= 0);
+  PASSED_M("Cmd reboot parsed.");
+  
   std::cout << qContainer->get_CmdQ().size() << '\n';
   def::GenCmdPtr_t gen_cmd_ptr = qContainer->get_CmdQ().front();
   gen_cmd_ptr->execute();
@@ -93,10 +94,10 @@ void variousTests()
   buffer[3] = static_cast<unsigned char>(60);
   cmdManager.getByteStream(&buffer[0], sizeof(buffer));
   res = cmdManager.parseCommand();
-  if (res < 0)
-  {
-    std::cerr << "parse failed with res: " << res << std::endl;
-  }
+  std::cout << "Res parse cmd watchdog watch: " << res << std::endl;
+  assert(res >= 0);
+  PASSED_M("Cmd watchdog watch parsed.");
+  
   std::cout << qContainer->get_CmdQ().size() << '\n';
   gen_cmd_ptr = qContainer->get_CmdQ().back();
   gen_cmd_ptr->execute();
@@ -120,7 +121,11 @@ void variousTests()
   // std::cout << '\n';
 
   cmdManager.getByteStream(&buffer[0], sizeof(buffer));
-  res = cmdManager.parseCommand();
+  res = cmdManager.parseCommand();  
+  std::cout << "Res parse cmd watchdog watch and immediate reboot: " << res << std::endl;
+  assert(res >= 0);
+  PASSED_M("Cmd watchdog watch and immediate reboot parsed.");
+  
   std::cout << qContainer->get_CmdQ().size() << '\n';
 
   for (auto p : qContainer->get_CmdQ())
@@ -192,17 +197,22 @@ void test_Logged_policy()
   buffer[1] = cmd_format::t_CmdId::COMMAND_IMMEDIATE_REBOOT;
   cmdManager.getByteStream(&buffer[0], sizeof(buffer));
   int res = cmdManager.parseCommand();
-  if (res < 0)
-  {
-    std::cerr << "parse failed with res: " << res << std::endl;
-  }
+  std::cout << "Res parse cmd reboot: " << res << std::endl;
+  assert(res >= 0);
+  PASSED_M("Cmd reboot parsed.");
 
   // cmd::Cmd<Restart_Server,policies::Logged> restart;
   std::shared_ptr<cmd::Cmd<Restart_Server,policies::Logged>> restart;
   def::GenCmdPtr_t p_cp;
   for (auto p : *qContainer)
   {
-    // if (utilfunc::isInstanceOf<policies::Logged>(p))
+    bool isinst = utilfunc::isInstanceOf<cmd::Cmd<Restart_Server, policies::Logged>>(p);
+    assert(isinst);
+    PASSED_M("p is instance of Cmd<Restart_Server, policies::Logged>.");
+    isinst = utilfunc::isInstanceOf<policies::Logged>(p);
+    assert(isinst);
+    PASSED_M("p is instance of policies::Logged.");
+       
     if (utilfunc::isInstanceOf<cmd::Cmd<Restart_Server, policies::Logged>>(p))
     {
       // restart = dynamic_cast<cmd::Cmd<Restart_Server,policies::Logged>&>(*p);
@@ -231,6 +241,10 @@ void test_Logged_policy()
   p_logged_endcycle_cmd->init(restart->get_sptr_server(), restart->get_callback(), restart->get_req());
   p_logged_endcycle_cmd->execute();
 
+  bool isinst = utilfunc::isInstanceOf<policies::ExecAtEndOfCycle>(p_logged_endcycle_cmd);
+  assert(isinst);
+  PASSED_M("p_logged_endcycle_cmd is an instance of ExecAtEndOfCycle.");
+  
   if (utilfunc::isInstanceOf<policies::ExecAtEndOfCycle>(p_logged_endcycle_cmd))
   {
     std::cout << "YES, this is a valid instance of ExecAtEndOfCycle!\n";
@@ -246,6 +260,10 @@ void test_Logged_policy()
   auto p_logged_dealloc_cmd = utilfunc::addPolicy< Restart_Server, policies::DeallocMemPrecond, policies::Logged, policies::ExecAtEndOfCycle >(p_logged_endcycle_cmd);
   p_logged_dealloc_cmd->execute();
 
+  isinst = utilfunc::isInstanceOf<policies::DeallocMemPrecond>(p_logged_dealloc_cmd);
+  assert(isinst);
+  PASSED_M("p_logged_endcycle_cmd is an instance of DeallocMemPrecond.");
+  
   if (utilfunc::isInstanceOf<policies::DeallocMemPrecond>(p_logged_dealloc_cmd))
   {
     std::cout << "YES, this is a valid instance of DeallocMemPrecond!\n";
@@ -255,6 +273,10 @@ void test_Logged_policy()
     std::cout << "NO, this is not a valid instance of DeallocMemPrecond!\n";
   }
 
+  isinst = utilfunc::isInstanceOf<policies::ExecAtEndOfCycle>(p_logged_dealloc_cmd);
+  assert(isinst);
+  PASSED_M("p_logged_endcycle_cmd is an instance of ExecAtEndOfCycle.");
+  
   if (utilfunc::isInstanceOf<policies::ExecAtEndOfCycle>(p_logged_dealloc_cmd))
   {
     std::cout << "YES, this is a valid instance of ExecAtEndOfCycle!\n";
@@ -299,13 +321,16 @@ void test_isInstanceOf_negative()
 
   cmdManager.getByteStream(&buffer[0], sizeof(buffer));
   int res = cmdManager.parseCommand();
-  if (res < 0)
-  {
-    std::cerr << "parse failed with res: " << res << std::endl;
-  }
-
+  std::cout << "Res of parseCommand cmd watchdog watch " << res << std::endl;
+  assert(res >= 0);
+  PASSED_M("Cmd watchdog watch parsed.");
+  
   for (auto p : *qContainer)
   {
+    
+    bool isinst = utilfunc::isInstanceOf<policies::Logged>(p);
+    assert(!isinst);
+    PASSED_M("p is NOT an instance of Logged.");
     if (utilfunc::isInstanceOf<policies::Logged>(p))
     {
       std::cout << "YES, this is a valid instance of Logged!\n";
@@ -333,33 +358,59 @@ void test_copy()
     cmd::Cmd<Restart_Server,policies::Logged> cmd_restart_logged2{2,1};
     cmd_restart_logged2.init(sContainer.get_Restart_server(), &Restart_Server::immediatePiRestart, {});
     cmd_restart_logged2.execute();
-    std::cout << "{" << (int)cmd_restart_logged2.getS_ID() << " " << (int)cmd_restart_logged2.getC_ID() << "}\n"; 
+    std::cout << "{" << (int)cmd_restart_logged2.getS_ID() << " " << (int)cmd_restart_logged2.getC_ID() << "}\n";
+    assert(2 == (int)cmd_restart_logged2.getS_ID());
+    assert(1 == (int)cmd_restart_logged2.getC_ID());
+    PASSED_M("cmd_restart_logged2 has id {2,1}");
 
     cmd_restart_logged = cmd_restart_logged2;
   }
   cmd_restart_logged.execute();
   std::cout << "{" << (int)cmd_restart_logged.getS_ID() << " " << (int)cmd_restart_logged.getC_ID() << "}\n"; 
+  assert(2 == (int)cmd_restart_logged.getS_ID());
+  assert(1 == (int)cmd_restart_logged.getC_ID());
+  PASSED_M("cmd_restart_logged has id {2,1}");
   
   cmd::Cmd<Restart_Server,policies::Logged> cmd_restart_logged3{cmd_restart_logged};
   cmd_restart_logged3.execute();
   std::cout << "{" << (int)cmd_restart_logged3.getS_ID() << " " << (int)cmd_restart_logged3.getC_ID() << "}\n"; 
+  assert(2 == (int)cmd_restart_logged3.getS_ID());
+  assert(1 == (int)cmd_restart_logged3.getC_ID());
+  PASSED_M("cmd_restart_logged3 has id {2,1}");
  
-  cmd::Cmd<Restart_Server> cmd_restart{2,1};
+  cmd::Cmd<Restart_Server> cmd_restart{0,5};
   cmd::Cmd<Restart_Server> cmd_restart2{2,1};
   cmd_restart2.init(sContainer.get_Restart_server(), &Restart_Server::immediatePiRestart, {});
+  assert(0 == (int)cmd_restart.getS_ID());
+  assert(5 == (int)cmd_restart.getC_ID());
+  PASSED_M("cmd_restart has id {0,5}");
 
   cmd_restart = cmd_restart2;
   std::cout << "{" << (int)cmd_restart.getS_ID() << " " << (int)cmd_restart.getC_ID() << "}\n"; 
   cmd_restart.execute();
+  assert(2 == (int)cmd_restart.getS_ID());
+  assert(1 == (int)cmd_restart.getC_ID());
+  PASSED_M("cmd_restart has id {2,1} after assigment");
 
   cmd::Cmd<Restart_Server> cmd_restart3(cmd_restart);
   std::cout << "{" << (int)cmd_restart3.getS_ID() << " " << (int)cmd_restart3.getC_ID() << "}\n"; 
   cmd_restart3.execute();
+  assert(2 == (int)cmd_restart3.getS_ID());
+  assert(1 == (int)cmd_restart3.getC_ID());
+  PASSED_M("cmd_restart3 has id {2,1}");
 
-  cmd::Cmd<Restart_Server,policies::Logged> cmd_restart4{2,1};
+  cmd::Cmd<Restart_Server,policies::Logged> cmd_restart4{0,5};
   cmd_restart4 = cmd_restart3;
   std::cout << "{" << (int)cmd_restart4.getS_ID() << " " << (int)cmd_restart4.getC_ID() << "}\n"; 
   cmd_restart4.execute();
+  assert(2 == (int)cmd_restart4.getS_ID());
+  assert(1 == (int)cmd_restart4.getC_ID());
+  PASSED_M("cmd_restart4 has id {2,1} after assignment");
+  
+  bool isinst = utilfunc::isInstanceOf<policies::Logged>(cmd_restart4);
+  assert(isinst);
+  PASSED_M("cmd_restart4 is instance of Logged.");
+  
   if (utilfunc::isInstanceOf<policies::Logged>(cmd_restart4)) 
   {
     std::cout << "YES\n";
@@ -370,6 +421,14 @@ void test_copy()
   cmd::Cmd<Restart_Server,policies::Logged> cmd_restart5(cmd_restart3);
   std::cout << "{" << (int)cmd_restart5.getS_ID() << " " << (int)cmd_restart5.getC_ID() << "}\n"; 
   cmd_restart5.execute();
+  
+  assert(2 == (int)cmd_restart5.getS_ID());
+  assert(1 == (int)cmd_restart5.getC_ID());
+  PASSED_M("cmd_restart5 has id {2,1}");
+  
+  isinst = utilfunc::isInstanceOf<policies::Logged>(cmd_restart5);
+  assert(isinst);
+  PASSED_M("cmd_restart5 is instance of Logged.");
   if (utilfunc::isInstanceOf<policies::Logged>(cmd_restart5)) 
   {
     std::cout << "YES\n";
@@ -381,13 +440,59 @@ void test_copy()
   cmd::Generic_Cmd& gen  = cmd_restart5;
   cmd::Cmd<Restart_Server,policies::Logged> cmd_restart6;
   cmd_restart6 = gen;
-  std::cout << "{" << (int)cmd_restart6.getS_ID() << " " << (int)cmd_restart6.getC_ID() << "}\n"; 
-  // this will generat std::bad_function_call!! (as expected)
-  // cmd_restart6.execute();
+  std::cout << "{" << (int)cmd_restart6.getS_ID() << " " << (int)cmd_restart6.getC_ID() << "}\n";
+  assert(2 == (int)cmd_restart6.getS_ID());
+  assert(1 == (int)cmd_restart6.getC_ID());
+  PASSED_M("cmd_restart6 has id {2,1}");
+  assert(2 == (int)gen.getS_ID());
+  assert(1 == (int)gen.getC_ID());
+  PASSED_M("gen has id {2,1}");
+  
+  try
+  {
+    // this will generat std::bad_function_call!! (as expected)
+    cmd_restart6.execute();  
+  }
+  catch (std::bad_function_call& e)
+  {
+    assert(true);
+    PASSED_M("cmd_restart6.execute() cannot execute callback because copy assigment between cmd::Cmd and Generic_Cmd!");
+  }
+  
+  try
+  {
+    // this will generat std::bad_function_call!! (as expected)
+    gen.execute();  
+  }
+  catch (std::bad_function_call& e)
+  {
+    assert(false);
+  }
+  PASSED_M("gen.execute() WILL execute callback because it's reference to an initialized cmd.");
+  
 
   cmd::Cmd<Restart_Server,policies::Logged> cmd_restart7(gen);
-  std::cout << "{" << (int)cmd_restart7.getS_ID() << " " << (int)cmd_restart7.getC_ID() << "}\n"; 
+  std::cout << "{" << (int)cmd_restart7.getS_ID() << " " << (int)cmd_restart7.getC_ID() << "}\n";
+  
+  assert(2 == (int)cmd_restart7.getS_ID());
+  assert(1 == (int)cmd_restart7.getC_ID());
+  PASSED_M("cmd_restart7 has id {2,1}");
+  assert(2 == (int)gen.getS_ID());
+  assert(1 == (int)gen.getC_ID());
+  PASSED_M("gen has id {2,1}");
+ 
+  try
+  {
     // this will generat std::bad_function_call!! (as expected)
+    cmd_restart7.execute();  
+  }
+  catch (std::bad_function_call& e)
+  {
+    assert(true);
+    PASSED_M("cmd_restart7.execute() cannot execute callback because copy constructor between cmd::Cmd and Generic_Cmd!");
+  }
+  
+  // this will generat std::bad_function_call!! (as expected)
   // cmd_restart7.execute();
 
   std::cout << "END_TEST : " << __FUNCTION__ << std::endl;
@@ -494,14 +599,25 @@ void test_decode_ping()
   a_param.push_back(static_cast<uint8_t>(ack & 0xff));
   
   cmdManager.getByteStream(&a_param[0], a_param.size());
-  cmdManager.parseCommand();
+  int res = cmdManager.parseCommand();
+  std::cout << "Res of parsed ping cmd: " << res << std::endl;
+  assert(res >= 0);
+  PASSED_M("Ping cmd was parsed.");
   
   modem.getPingQueue().clear();
+  assert(1 == qContainer.get_CmdQ(def::e_Ping).size());
+  PASSED_M("Ping Q has 1 element.");
+  
   if (qContainer.get_CmdQ(def::e_Ping).size() > 0)
   {
     for (auto p : qContainer.get_CmdQ(def::e_Ping))
     {
       p->execute();
+      
+      bool isinst = utilfunc::isInstanceOf<cmd::Cmd<PingServer,policies::Logged>>(p);
+      assert(isinst);
+      PASSED_M("p is an instance of cmd::Cmd<PingServer,policies::Logged>.");
+      
       if (/*utilfunc::hasServerType(cmd_format::t_ServiceId::DIAGNOSTICS, cmd_format::t_CmdId::COMMAND_PING, p) && */
           utilfunc::isInstanceOf<cmd::Cmd<PingServer,policies::Logged>>(p))
       {
@@ -524,6 +640,9 @@ void test_decode_ping()
         std::cerr << "Modem queue is empty!\n";
         break;
       }
+      
+      assert(1 == modem.getPingQueue().size());
+      PASSED_M("Modem Q has 1 element.");
       
       for (auto q : modem.getPingQueue())
       {
@@ -551,8 +670,8 @@ void test_decode_ping_wrong_td()
   // insert a future timedate than the current time: 20 June 2022...
   a_param.insert(a_param.end(), {'2','0','0','6','2','0','2','2','1','2','1','3','0','5'});
   int ack = 400;
-  a_param.push_back(static_cast<uint8_t>((ack >> 24) & 0xff));
-  a_param.push_back(static_cast<uint8_t>((ack >> 16) & 0xff));
+  // a_param.push_back(static_cast<uint8_t>((ack >> 24) & 0xff));
+  // a_param.push_back(static_cast<uint8_t>((ack >> 16) & 0xff));
   a_param.push_back(static_cast<uint8_t>((ack >> 8) & 0xff));
   a_param.push_back(static_cast<uint8_t>(ack & 0xff));
   
