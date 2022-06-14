@@ -52,7 +52,9 @@ def::data_t PingServer::addToModemQueue(def::data_t req)
   tm += '-';
   tm += std::string(1,req[12]) + (char)req[13];
   
-  int ack = static_cast<int>(static_cast<int>(req[14] << 24) | (req[15] << 16) | (req[16] << 8) | req[17]);
+  // int ack = static_cast<int>(static_cast<int>(req[14] << 24) | (req[15] << 16) | (req[16] << 8) | req[17]);
+  
+  int ack = static_cast<int>(static_cast<int>(req[14] << 8) | req[15]);
   
   addToQueue(tm, ack);
   
@@ -76,7 +78,10 @@ std::string PingServer::req2str(def::data_t req) const
   tm += '-';
   tm += std::string(1,req[12]) + (char)req[13];
   
-  int ack = static_cast<int>(static_cast<int>(req[14] << 24) | (req[15] << 16) | (req[16] << 8) | req[17]);
+  // int ack = static_cast<int>(static_cast<int>(req[14] << 24) | (req[15] << 16) | (req[16] << 8) | req[17]);
+  
+  int ack = static_cast<int>(static_cast<int>(req[14] << 8) | req[15]);
+    
   
   res = "ping cmd recv at (" + tm + ") with ack = " + std::to_string(ack);
   
