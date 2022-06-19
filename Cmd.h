@@ -21,7 +21,7 @@ namespace cmd
     using Generic_Cmd::m_req;
     
     friend Cmd<S>;
-    Cmd() {}
+    Cmd() : Generic_Cmd() {}
     Cmd(def::t_SID sid, def::t_CID cid) : Generic_Cmd(sid, cid) 
     {}
 
