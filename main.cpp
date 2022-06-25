@@ -520,8 +520,9 @@ void test_ping()
   
   cmd_ping->init(sContainer.get_Ping_server(), &PingServer::addToModemQueue, a_param);
   cmd_ping->execute();
-  
+
   std::ostringstream ss;
+  modem.getPingQueue().clear();
   for (auto p : modem.getPingQueue())
   {
     std::cout << p.recv_tm << " : " << p.recv_ack << std::endl;
@@ -667,8 +668,8 @@ void test_decode_ping_wrong_td()
   
   std::vector<uint8_t> a_param{cmd_format::t_ServiceId::DIAGNOSTICS, cmd_format::t_CmdId::COMMAND_PING};
   
-  // insert a future timedate than the current time: 20 June 2022...
-  a_param.insert(a_param.end(), {'2','0','0','6','2','0','2','2','1','2','1','3','0','5'});
+  // insert a future timedate than the current time: 20 June 2125...
+  a_param.insert(a_param.end(), {'2','0','0','6','2','1','2','5','1','2','1','3','0','5'});
   int ack = 400;
   // a_param.push_back(static_cast<uint8_t>((ack >> 24) & 0xff));
   // a_param.push_back(static_cast<uint8_t>((ack >> 16) & 0xff));

@@ -2,7 +2,7 @@
 #define __PING_SERVER_H__
 
 #include "common.h"
-#include <map>
+// #include <map>
 #include <string>
 #include <functional>
 
@@ -24,18 +24,20 @@ class PingServer
     PingServer() = delete;
     void setup();
     def::data_t addToModemQueue(def::data_t req);
+    def::data_t sendResponse(def::data_t req);
     std::string req2str(def::data_t req) const;
-
+    // static std::shared_ptr<PingServer> create(Comm_RFD868& _modem);
     
   private:
-    void addToQueue(std::string recv_tm, int recv_ack);
+    void addToQueue(std::string recv_tm, int recv_ack, def::data_t req = {});
     static bool timedateOfPingResp(t_PingInfo& p);
+    static std::string serialize(const t_PingInfo& p);
     
-    int m_last_ack = -1;
-    std::map< std::string, 
-              int,
-              std::function<bool(const std::string&, const std::string&)>
-            > m_ackTable;
+    // int m_last_ack = -1;
+    // std::map< std::string, 
+    //           int,
+    //           std::function<bool(const std::string&, const std::string&)>
+    //         > m_ackTable;
            
     Comm_RFD868& modem;
     
