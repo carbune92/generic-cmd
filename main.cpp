@@ -630,6 +630,9 @@ void test_decode_ping()
 
         // std::string logStr = sContainer.get_Ping_server()->req2str(ping.get_req());
         l.log(logStr);
+        
+        // do it also via double dispatch
+        l.log(sContainer.get_Ping_server());
       }
       else
       {
