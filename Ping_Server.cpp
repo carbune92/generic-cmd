@@ -5,7 +5,7 @@
 
 bool cmptm(const std::string& tm1, const std::string& tm2)
 {
-  const std::string dt_format{"%d-%m-%Y %H-%M-%S"};
+  static const std::string dt_format{"%d-%m-%Y %H-%M-%S"};
   
   std::istringstream ss1{tm1}, ss2{tm2};
   std::tm dt1, dt2;
@@ -86,24 +86,11 @@ std::string PingServer::req2str(def::data_t req) const
   tm += '-';
   tm += std::string(1,req[12]) + (char)req[13];
   
-    
-  // int ack = static_cast<int>(static_cast<int>(req[14] << 24) | (req[15] << 16) | (req[16] << 8) | req[17]);
-  
   int ack = static_cast<int>(static_cast<int>(req[14] << 8) | req[15]);
-  
-  // res = "ping cmd recv at (" + tm + ") with ack = " + std::to_string(ack);
 
-
-   const char dt_format[] {"%d-%m-%Y %H-%M-%S"};
-  std::istringstream ss{tm};
-  std::tm dt;
-  ss >> std::get_time(&dt, dt_format);
-  const time_t tmp = mktime(&dt);
-  std::tm * p_dt_gmt = gmtime(&tmp);
-  std::ostringstream oss0;
-  oss0 << std::put_time(p_dt_gmt, dt_format);
+  std::string gmtTdStr = strTD_local2gmt(tm);
   
-  res = "ping cmd recv at (" + oss0.str() + ") with ack = " + std::to_string(ack);
+  res = "ping cmd recv at (" + gmtTdStr + ") with ack = " + std::to_string(ack);
 
   return res;
 }
@@ -127,8 +114,6 @@ void PingServer::addToQueue(std::string recv_tm, int recv_ack, def::data_t req)
       std::shared_ptr<PingServer> p_pingSrv = std::make_shared<PingServer>(modem);
       p_pingResp->init(p_pingSrv, &PingServer::sendResponse, req);
       p_pingSrv = nullptr;
-
-      // m_ackTable.insert( {recv_tm, recv_ack} );
     }
     else
     {
@@ -155,36 +140,15 @@ bool PingServer::timedateOfPingResp(t_PingInfo& p)
 {
   bool res = false;
   
-  std::time_t t = std::time(nullptr);
-  const char dt_format[] {"%d-%m-%Y %H-%M-%S"};
-  
-  std::ostringstream oss;
-  std::tm *tm = std::gmtime(&t);
-  oss << std::put_time(tm, dt_format);
+  std::string crtGmtTd = strTD_getGmtTime();
 
-/*  
-  std::istringstream ss1{tm1}, ss2{tm2};
-  std::tm dt1, dt2;
-
-  ss1 >> std::get_time(&dt1, dt_format.c_str());
-  ss2 >> std::get_time(&dt2, dt_format.c_str());
+  std::string gmtTdStr = strTD_local2gmt(p.recv_tm);
   
-  double diff = difftime(mktime(&dt1),mktime(&dt2));
-*/
-
-  std::istringstream ss{p.recv_tm};
-  std::tm dt;
-  ss >> std::get_time(&dt, dt_format);
-  const time_t tmp = mktime(&dt);
-  std::tm * p_dt_gmt = gmtime(&tmp);
-  std::ostringstream oss0;
-  oss0 << std::put_time(p_dt_gmt, dt_format);
-  
-  res = cmptm(oss0.str(), oss.str());
+  res = cmptm(gmtTdStr, crtGmtTd);
   
   if (res)
   {
-    p.recv_tm = oss.str();
+    p.recv_tm = crtGmtTd;
   }
   
   return res;

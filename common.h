@@ -6,6 +6,9 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <ctime>
+#include <sstream>
+#include <iomanip>
 
 // namespace policies
 // {
@@ -20,6 +23,65 @@ namespace cmd
   // class Cmd<T, policies::DeallocMemPrecond>;
   // class Cmd;
 }
+
+inline std::string strTD_local2gmt(std::string localstr)
+{
+  std::string gmtstr;
+  
+  static const char dt_format[] {"%d-%m-%Y %H-%M-%S"};
+  std::istringstream ss{localstr};
+  std::tm dt;
+  ss >> std::get_time(&dt, dt_format);
+  const time_t tmp = mktime(&dt);
+  std::tm * p_dt_gmt = gmtime(&tmp);
+  std::ostringstream oss;
+  oss << std::put_time(p_dt_gmt, dt_format);
+  gmtstr = oss.str();
+  
+  return gmtstr;
+}
+
+inline std::string strTD_gmt2local(std::string gmtstr)
+{
+  std::string localstr;
+  
+  static const char dt_format[] {"%d-%m-%Y %H-%M-%S"};
+  std::istringstream ss{gmtstr};
+  std::tm dt;
+  ss >> std::get_time(&dt, dt_format);
+  const time_t tmp = mktime(&dt);
+  std::tm * p_dt_gmt = localtime(&tmp);
+  std::ostringstream oss;
+  oss << std::put_time(p_dt_gmt, dt_format);
+  localstr = oss.str();
+  
+  return localstr;
+}
+
+inline std::string strTD_getGmtTime()
+{ 
+  std::time_t t = std::time(nullptr);
+  static const char dt_format[] {"%d-%m-%Y %H-%M-%S"};
+  
+  std::ostringstream oss;
+  std::tm *tm = std::gmtime(&t);
+  oss << std::put_time(tm, dt_format);
+  
+  return oss.str();
+}
+
+inline std::string strTD_getLocalTime()
+{ 
+  std::time_t t = std::time(nullptr);
+  static const char dt_format[] {"%d-%m-%Y %H-%M-%S"};
+  
+  std::ostringstream oss;
+  std::tm *tm = std::localtime(&t);
+  oss << std::put_time(tm, dt_format);
+  
+  return oss.str();
+}
+
 
 // #include "Cmd.h"
 
