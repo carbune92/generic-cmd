@@ -693,6 +693,94 @@ void test_decode_ping_wrong_td()
   std::cout << "Cmd queue is empty because the timedate in the stream is a future one!\n";
 }
 
+void test_decode_ping_new_queue()
+{
+    std::cout << "START_TEST : " << __FUNCTION__ << std::endl;
+  ComManager cmdManager = init();
+  ComQueueContainer& qContainer = cmdManager.getComQueueContainer();
+  ComServerContainer& sContainer = cmdManager.getServeContainer();
+  
+  std::shared_ptr<PingServer> p_pingS = sContainer.get_Ping_server();
+  
+  std::vector<uint8_t> a_param{cmd_format::t_ServiceId::DIAGNOSTICS, cmd_format::t_CmdId::COMMAND_PING};
+  
+  a_param.insert(a_param.end(), {'2','9','0','6','2','0','2','2','1','5','2','3','5','5'});
+  int ack = 695;
+  a_param.push_back(static_cast<uint8_t>((ack >> 8) & 0xff));
+  a_param.push_back(static_cast<uint8_t>(ack & 0xff));
+  
+  qContainer.get_CmdQ(def::e_Ping).clear();
+  modem.getPingQueue().clear();
+  modem.getPingQueuePtr().clear();
+  
+  cmdManager.getByteStream(&a_param[0], a_param.size());
+  int res = cmdManager.parseCommand();
+  std::cout << "Res of parsed ping cmd: " << res << std::endl;
+  assert(res >= 0);
+  PASSED_M("Ping cmd was parsed.");
+  
+  assert(1 == qContainer.get_CmdQ(def::e_Ping).size());
+  PASSED_M("Ping Q has 1 element.");
+  
+  for (auto p : qContainer.get_CmdQ(def::e_Ping))
+  {
+    p->execute();
+      
+    bool isinst = utilfunc::isInstanceOf<cmd::Cmd<PingServer,policies::Logged>>(p);
+    assert(isinst);
+    PASSED_M("p is an instance of cmd::Cmd<PingServer,policies::Logged>.");
+    
+    if (/*utilfunc::hasServerType(cmd_format::t_ServiceId::DIAGNOSTICS, cmd_format::t_CmdId::COMMAND_PING, p) && */
+        utilfunc::isInstanceOf<cmd::Cmd<PingServer,policies::Logged>>(p))
+    {
+      policies::Logged& l = dynamic_cast<policies::Logged&>(*p);
+      // auto& ping = dynamic_cast<cmd::Cmd<PingServer,policies::Logged>&>(*p);
+      l.setFileStream("./ping_log.txt");
+      
+      std::string logStr = p_pingS->req2str(p->get_req());
+
+      // std::string logStr = sContainer.get_Ping_server()->req2str(ping.get_req());
+      l.log(logStr);
+      
+      // do it also via double dispatch
+      l.log(sContainer.get_Ping_server());
+    }
+    else
+    {
+      std::cerr << "not of Logged type or does not have PingServer!\n";
+    }
+    
+    if (modem.getPingQueue().size() == 0)
+    {
+      std::cerr << "Modem queue is empty!\n";
+      break;
+    }
+    
+    if (modem.getPingQueuePtr().size() == 0)
+    {
+      std::cerr << "Modem queue ptr is empty!\n";
+      break;
+    }
+    
+    assert(1 == modem.getPingQueue().size());
+    PASSED_M("Modem Q has 1 element.");
+    
+    assert(1 == modem.getPingQueuePtr().size());
+    PASSED_M("Modem Q ptr has 1 element.");
+    
+    for (auto q : modem.getPingQueue())
+    {
+      std::cout << q.recv_tm << " : " << q.recv_ack << std::endl;
+    }
+    
+    for (auto q : modem.getPingQueuePtr())
+    {
+      q->execute();
+    }
+  }
+ 
+}
+
 
 
 int main()
@@ -712,6 +800,8 @@ int main()
   test_decode_ping();
   std::cout << "====================================================\n";
   test_decode_ping_wrong_td();
+  std::cout << "====================================================\n";
+  test_decode_ping_new_queue();
   std::cout << "====================================================\n";
   return 0;
 }

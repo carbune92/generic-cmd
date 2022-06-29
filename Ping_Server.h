@@ -5,13 +5,14 @@
 // #include <map>
 #include <string>
 #include <functional>
-
-#include "Comm_RFD868.h"
+#include <utility>
 
 #include <ctime>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+
+class Comm_RFD868;
 
 bool cmptm(const std::string&, const std::string&);
 
@@ -26,13 +27,13 @@ class PingServer
     def::data_t addToModemQueue(def::data_t req);
     def::data_t sendResponse(def::data_t req);
     std::string req2str(def::data_t req) const;
-    // static std::shared_ptr<PingServer> create(Comm_RFD868& _modem);
     
   private:
-    void addToQueue(std::string recv_tm, int recv_ack, def::data_t req = {});
+    void addToQueue(std::string recv_tm, int recv_ack);
     static bool timedateOfPingResp(t_PingInfo& p);
-    static std::string serialize(const t_PingInfo& p);
-    
+    static std::string serialize2modemstr(const t_PingInfo& p);
+    static def::data_t serialize2req(const t_PingInfo& p);
+    static std::pair<std::string, int> req2pair(def::data_t);
     // int m_last_ack = -1;
     // std::map< std::string, 
     //           int,
