@@ -1,6 +1,8 @@
 #include "Logged.h"
 #include <iostream>
 
+#include "Ping_Server.h"
+
 namespace policies
 {
   void Logged::setFileStream(const char* filename)
@@ -23,6 +25,12 @@ namespace policies
       auto tm = *std::localtime(&t);
       m_out << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << ": " << context << std::endl;
     }
+  }
+  
+  void Logged::log(std::shared_ptr<PingServer> pingServ)
+  {
+    std::string s = pingServ->req2str(this->get_req());
+    this->log(s);
   }
 
   Logged::~Logged()
