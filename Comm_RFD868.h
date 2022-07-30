@@ -26,6 +26,10 @@ class Comm_RFD868
     {
       return pingQueuePtr;
     }
+    
+    void sendPingData(t_PingInfo pingResp)
+    {
+    }
   
   private:
     std::vector<t_PingInfo> pingQueue;
