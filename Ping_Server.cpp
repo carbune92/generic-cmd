@@ -47,9 +47,9 @@ std::string PingServer::req2str(def::data_t req) const
   std::string tm = pair.first;
   int ack = pair.second;
 
-  std::string gmtTdStr = strTD_local2gmt(tm);
+  // std::string gmtTdStr = strTD_local2gmt(tm);
   
-  res = "ping cmd recv at (" + gmtTdStr + ") with ack = " + std::to_string(ack);
+  res = "ping cmd recv at (" + tm + ") with ack = " + std::to_string(ack);
 
   return res;
 }
@@ -60,9 +60,9 @@ void PingServer::addToQueue(std::string recv_tm, int recv_ack)
   if (recv_ack >= 0 && recv_ack < 1000)
   { 
     t_PingInfo pingInfo{recv_tm, recv_ack};
-    bool res = timedateOfPingResp(pingInfo);
-    std::cout << " res of timedateOfPingResp: " << (int)res << std::endl;
-    if (res)
+    // bool res = timedateOfPingResp(pingInfo);
+    // std::cout << " res of timedateOfPingResp: " << (int)res << std::endl;
+    if (true)
     {
       // std::cout << "Ping cmd timedate is actual!\n";
       modem.addToPingQueue( std::move(pingInfo) );
@@ -95,9 +95,13 @@ def::data_t PingServer::sendResponse(def::data_t req)
   
   std::string toSend = serialize2modemstr({pair.first, pair.second});
   
-  std::cout << "serialized ping response to send: " << toSend << std::endl;
+  // std::cout << "serialized ping response to send: " << toSend << std::endl;
+  std::cout << "[PING_CMD] : serialized ping response to send: " << toSend << std::endl;
   
-  //TODO send via modem
+  std::cout << "[PING CMD] :" << pair.first << " : " << pair.second << std::endl;
+  
+  // send via modem
+  modem.sendPingData({pair.first, pair.second});
   
   return def::data_t{};
 }
@@ -106,27 +110,27 @@ bool PingServer::timedateOfPingResp(t_PingInfo& p)
 {
   bool res = false;
   
-  std::string crtGmtTd = strTD_getGmtTime();
+  // std::string crtGmtTd = strTD_getGmtTime();
 
-  std::string gmtTdStr = strTD_local2gmt(p.recv_tm);
+  // std::string gmtTdStr = strTD_local2gmt(p.recv_tm);
   
-  res = cmptm(gmtTdStr, crtGmtTd);
+  // res = cmptm(gmtTdStr, crtGmtTd);
   
-  if (res)
-  {
-    p.recv_tm = crtGmtTd;
-  }
+  // if (res)
+  // {
+  //   p.recv_tm = crtGmtTd;
+  // }
   
   return res;
 }
 
-std::string PingServer::serialize2modemstr(const t_PingInfo& p)
+std::string PingServer::serialize2modemstr(t_PingInfo&& p)
 {
   std::string res = "";
 
   // "ping|S_ID|C_ID|timedate|ack"
 
-  char outstr[25];
+  static char outstr[64];
   sprintf(outstr, "ping|%d|%d|%s|%d\n", 
     (int)cmd_format::t_ServiceId::DIAGNOSTICS, 
     (int)cmd_format::t_CmdId::COMMAND_PING, 

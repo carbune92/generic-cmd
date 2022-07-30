@@ -31,7 +31,7 @@ class PingServer
   private:
     void addToQueue(std::string recv_tm, int recv_ack);
     static bool timedateOfPingResp(t_PingInfo& p);
-    static std::string serialize2modemstr(const t_PingInfo& p);
+    static std::string serialize2modemstr(t_PingInfo&& p);
     static def::data_t serialize2req(const t_PingInfo& p);
     static std::pair<std::string, int> req2pair(def::data_t);
     // int m_last_ack = -1;
