@@ -73,6 +73,7 @@ void variousTests()
   smen = cmd::Cmd<Restart_Server>{1,2};
   std::cout << (int)smen.getC_ID() << '\n';
 
+
   qContainer->get_CmdQ().clear();
   unsigned char buffer[256] = {{0}};
   buffer[0] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
@@ -91,7 +92,8 @@ void variousTests()
   buffer[0] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
   buffer[1] = cmd_format::t_CmdId::COMMAND_WATCHDOG;
   buffer[2] = cmd_format::t_watchdog::REG_WATCHDOG_WATCH;
-  buffer[3] = static_cast<unsigned char>(60);
+  buffer[3] = 0;
+  buffer[4] = static_cast<unsigned char>(60);
   cmdManager.getByteStream(&buffer[0], sizeof(buffer));
   res = cmdManager.parseCommand();
   std::cout << "Res parse cmd watchdog watch: " << res << std::endl;
@@ -102,14 +104,14 @@ void variousTests()
   gen_cmd_ptr = qContainer->get_CmdQ().back();
   gen_cmd_ptr->execute();
 
-
   std::fill(buffer, buffer+sizeof(buffer), 0U);
   qContainer->get_CmdQ().clear();
   buffer[0] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
   buffer[1] = cmd_format::t_CmdId::COMMAND_WATCHDOG;
   buffer[2] = cmd_format::t_watchdog::REG_WATCHDOG_WATCH;
-  buffer[3] = static_cast<unsigned char>(60);
-  buffer[4] = cmd_format::CMD_SEPARATOR;
+  buffer[3] = 0;
+  buffer[4] = static_cast<unsigned char>(60);
+  // buffer[3] = cmd_format::CMD_SEPARATOR;
   buffer[5] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
   buffer[6] = cmd_format::t_CmdId::COMMAND_IMMEDIATE_REBOOT;
 
@@ -192,7 +194,7 @@ void test_Logged_policy()
   ComManager cmdManager{sContainer, qContainer};
 
   qContainer->get_CmdQ().clear();
-  unsigned char buffer[256];
+  unsigned char buffer[256] = {{0}};
   buffer[0] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
   buffer[1] = cmd_format::t_CmdId::COMMAND_IMMEDIATE_REBOOT;
   cmdManager.getByteStream(&buffer[0], sizeof(buffer));
@@ -204,6 +206,7 @@ void test_Logged_policy()
   // cmd::Cmd<Restart_Server,policies::Logged> restart;
   std::shared_ptr<cmd::Cmd<Restart_Server,policies::Logged>> restart;
   def::GenCmdPtr_t p_cp;
+
   for (auto p : *qContainer)
   {
     bool isinst = utilfunc::isInstanceOf<cmd::Cmd<Restart_Server, policies::Logged>>(p);
@@ -212,7 +215,7 @@ void test_Logged_policy()
     isinst = utilfunc::isInstanceOf<policies::Logged>(p);
     assert(isinst);
     PASSED_M("p is instance of policies::Logged.");
-       
+
     if (utilfunc::isInstanceOf<cmd::Cmd<Restart_Server, policies::Logged>>(p))
     {
       // restart = dynamic_cast<cmd::Cmd<Restart_Server,policies::Logged>&>(*p);
@@ -228,6 +231,7 @@ void test_Logged_policy()
     {
       std::cout << "NO, this is not a valid instance of Logged!\n";
     }
+
     p_cp = p;
     p = nullptr;
   }
@@ -799,9 +803,11 @@ int main()
   std::cout << "====================================================\n";
   test_decode_ping();
   std::cout << "====================================================\n";
+  /*
   // test_decode_ping_wrong_td();
   // std::cout << "====================================================\n";
   test_decode_ping_new_queue();
   std::cout << "====================================================\n";
+  */
   return 0;
 }
