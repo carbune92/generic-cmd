@@ -15,3 +15,4 @@ files_that_need_to_be_integrated.txt
 *.o
 *.d
 Makefile
+*_BAK.*
