@@ -61,7 +61,9 @@ int ComManager::parseCommand()
   {
     def::t_SID sid = *beginCmdIt;
     int offset_to_new_cmd = 0;
+    const int HEADER_SZ = 2;
     // std::cout << "[DBG]: " << (int)sid << '\n';
+    // std::cout << "c0: " << (int)(*beginCmdIt) << '\n';
 
     if (t_ServiceId::SERViCE_COMMAND_DISTRIBUTION == sid)
     {
@@ -71,24 +73,28 @@ int ComManager::parseCommand()
       {
         case t_CmdId::COMMAND_IMMEDIATE_REBOOT:
         {
-          res = parseRebootCmd(beginCmdIt+2, offset_to_new_cmd);
+          res = parseRebootCmd(beginCmdIt+HEADER_SZ, offset_to_new_cmd);
           cmdFound = true;
+          offset_to_new_cmd += HEADER_SZ + 1;
           // std::cout << offset_to_new_cmd << '\n';
           break;  
         }
         case t_CmdId::COMMAND_WATCHDOG:
         {
-          res = parseWatchdogCmd(beginCmdIt+2, offset_to_new_cmd);
+          res = parseWatchdogCmd(beginCmdIt+HEADER_SZ, offset_to_new_cmd);
           cmdFound = true;
+          offset_to_new_cmd += HEADER_SZ + 1;
           break;
         }
         default:
         {
-          std::cerr << "ComManager::parseCommand: unknown cid from SERViCE_COMMAND_DISTRIBUTION : " << cid << std::endl;
-          res = -1;
+          // std::cerr << "ComManager::parseCommand: unknown cid from SERViCE_COMMAND_DISTRIBUTION : " << cid << std::endl;
+          // res = -1;
+          offset_to_new_cmd += 1;
+          break;
         }
       }
-      offset_to_new_cmd += 3;
+      
     }
     else if (t_ServiceId::DIAGNOSTICS == sid)
     {
@@ -98,30 +104,45 @@ int ComManager::parseCommand()
       {
         case t_CmdId::COMMAND_PING:
         {
-          res = parsePingCmd(beginCmdIt+2, offset_to_new_cmd, def::e_Ping);
+          res = parsePingCmd(beginCmdIt+HEADER_SZ, offset_to_new_cmd, def::e_Ping);
           cmdFound = true;
           // std::cout << offset_to_new_cmd << '\n';
+          offset_to_new_cmd += HEADER_SZ + 1;
           break;
         }
         default:
         {
-          std::cerr << "ComManager::parseCommand: unknown cid from DIAGNOSTICS : " << cid << std::endl;
-          res = -1;
+          offset_to_new_cmd += 1;
+          // break;
+          // continue;
+          // std::cerr << "ComManager::parseCommand: unknown cid from DIAGNOSTICS : " << cid << std::endl;
+          // res = -1;
         }
       }
-      offset_to_new_cmd += 3;
     }
     else
     {
-      // offset_to_new_cmd += 1;
+      offset_to_new_cmd += 1;
       // res = -4;
       // std::cerr << "ComManager::parseCommand: unknown sid = " << (int)sid << ", res = " << res << std::endl;
-      break;
+      // break;
     }
+
+    // std::cout << "offset_to_new_cmd : " << offset_to_new_cmd << '\n';
 
     beginCmdIt += offset_to_new_cmd;
 
-  } while (beginCmdIt != endCmdIt);
+    // std::cout << "c1: " << (int)(*beginCmdIt) << '\n';
+    // std::cout << "e: " << (int)(*endCmdIt) << '\n';
+    // std::cout << endCmdIt - beginCmdIt << '\n';
+
+  } while (beginCmdIt < endCmdIt);
+
+  if (beginCmdIt >= endCmdIt && !cmdFound)
+  {
+    res = -4;
+    std::cout  << "ComManager::parseCommand: no valid command found in stream!" << std::endl;
+  }
   
   return res;
 }
