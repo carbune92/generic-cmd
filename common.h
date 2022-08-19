@@ -127,7 +127,6 @@ namespace cmd_format
   {
     static const uint8_t SERViCE_COMMAND_DISTRIBUTION = 2;
     static const uint8_t DIAGNOSTICS = 3;
-    // static const uint8_t RESERVED = 4;
   };
 
   namespace t_CmdId
@@ -142,7 +141,6 @@ namespace cmd_format
   namespace t_restart
   {
     static constexpr int NR_BYTES_PARAMS_RESTART = 0;
-    // static const int CMD_SIZE_RESTART = 2;
   };
 
   namespace t_watchdog
@@ -154,7 +152,6 @@ namespace cmd_format
     static constexpr int NR_BYTES_PARAMS_WATCH = sizeof(uint8_t) + sizeof(uint8_t);
     static constexpr int NR_BYTES_PARAMS_WAKE = sizeof(uint8_t) + sizeof(uint16_t);
     static constexpr int NR_BYTES_PARAMS_DUMP = sizeof(uint8_t);
-    // static const int CMD_SIZE_WD = 5;
   };
   
   namespace t_ping

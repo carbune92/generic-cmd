@@ -111,7 +111,6 @@ void variousTests()
   buffer[2] = cmd_format::t_watchdog::REG_WATCHDOG_WATCH;
   buffer[3] = 0;
   buffer[4] = static_cast<unsigned char>(60);
-  // buffer[3] = cmd_format::CMD_SEPARATOR;
   buffer[5] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
   buffer[6] = cmd_format::t_CmdId::COMMAND_IMMEDIATE_REBOOT;
 
@@ -598,8 +597,6 @@ void test_decode_ping()
   std::vector<uint8_t> a_param{cmd_format::t_ServiceId::DIAGNOSTICS, cmd_format::t_CmdId::COMMAND_PING};
   a_param.insert(a_param.end(), {'0','1','0','6','2','0','2','2','1','2','1','3','0','5'});
   int ack = 923;
-  // a_param.push_back(static_cast<uint8_t>((ack >> 24) & 0xff));
-  // a_param.push_back(static_cast<uint8_t>((ack >> 16) & 0xff));
   a_param.push_back(static_cast<uint8_t>((ack >> 8) & 0xff));
   a_param.push_back(static_cast<uint8_t>(ack & 0xff));
   
@@ -623,8 +620,9 @@ void test_decode_ping()
       assert(isinst);
       PASSED_M("p is an instance of cmd::Cmd<PingServer,policies::Logged>.");
       
-      if (/*utilfunc::hasServerType(cmd_format::t_ServiceId::DIAGNOSTICS, cmd_format::t_CmdId::COMMAND_PING, p) && */
-          utilfunc::isInstanceOf<cmd::Cmd<PingServer,policies::Logged>>(p))
+      // if (utilfunc::hasServerType(cmd_format::t_ServiceId::DIAGNOSTICS, cmd_format::t_CmdId::COMMAND_PING, p) && 
+      //     utilfunc::isInstanceOf<cmd::Cmd<PingServer,policies::Logged>>(p))
+      if (utilfunc::isInstanceOf<cmd::Cmd<PingServer,policies::Logged>>(p))
       {
         policies::Logged& l = dynamic_cast<policies::Logged&>(*p);
         // auto& ping = dynamic_cast<cmd::Cmd<PingServer,policies::Logged>&>(*p);
@@ -803,11 +801,10 @@ int main()
   std::cout << "====================================================\n";
   test_decode_ping();
   std::cout << "====================================================\n";
-  /*
   // test_decode_ping_wrong_td();
   // std::cout << "====================================================\n";
   test_decode_ping_new_queue();
   std::cout << "====================================================\n";
-  */
+  
   return 0;
 }

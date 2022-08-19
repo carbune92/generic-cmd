@@ -48,7 +48,7 @@ int ComManager::parseCommand()
   int res = 0;
   def::data_t::iterator beginCmdIt = m_byteStream.begin();
   def::data_t::iterator endCmdIt = m_byteStream.end();
-  // def::data_t::iterator sepIt = std::find(m_byteStream.begin(), m_byteStream.end(), CMD_SEPARATOR);
+  bool cmdFound = false;
   
   // for (auto b : m_byteStream)
   // {
@@ -57,15 +57,8 @@ int ComManager::parseCommand()
   // std::cout << std::dec;
   // std::cout << std::endl;
 
-  // if (m_byteStream.end() == sepIt)
-  // {
-  //   res = -5;
-  //   std::cerr << "ComManager::parseCommand: ";
-  // }
-
   do
   {
-    /* code */
     def::t_SID sid = *beginCmdIt;
     int offset_to_new_cmd = 0;
     // std::cout << "[DBG]: " << (int)sid << '\n';
@@ -78,16 +71,15 @@ int ComManager::parseCommand()
       {
         case t_CmdId::COMMAND_IMMEDIATE_REBOOT:
         {
-          // res = parseRebootCmd(m_byteStream.begin()+2, m_byteStream.end());
-          // res = parseRebootCmd(beginCmdIt+2, sepIt);
           res = parseRebootCmd(beginCmdIt+2, offset_to_new_cmd);
+          cmdFound = true;
           // std::cout << offset_to_new_cmd << '\n';
           break;  
         }
         case t_CmdId::COMMAND_WATCHDOG:
         {
-          // res = parseWatchdogCmd(m_byteStream.begin()+2, m_byteStream.end());
           res = parseWatchdogCmd(beginCmdIt+2, offset_to_new_cmd);
+          cmdFound = true;
           break;
         }
         default:
@@ -96,7 +88,6 @@ int ComManager::parseCommand()
           res = -1;
         }
       }
-
       offset_to_new_cmd += 3;
     }
     else if (t_ServiceId::DIAGNOSTICS == sid)
@@ -108,6 +99,8 @@ int ComManager::parseCommand()
         case t_CmdId::COMMAND_PING:
         {
           res = parsePingCmd(beginCmdIt+2, offset_to_new_cmd, def::e_Ping);
+          cmdFound = true;
+          // std::cout << offset_to_new_cmd << '\n';
           break;
         }
         default:
@@ -116,23 +109,16 @@ int ComManager::parseCommand()
           res = -1;
         }
       }
-
       offset_to_new_cmd += 3;
     }
     else
     {
-      offset_to_new_cmd += 1;
+      // offset_to_new_cmd += 1;
       // res = -4;
       // std::cerr << "ComManager::parseCommand: unknown sid = " << (int)sid << ", res = " << res << std::endl;
+      break;
     }
 
-    // if (sepIt == m_byteStream.end())
-    // {
-    //   break;
-    // }
-
-    // beginCmdIt = sepIt+1; 
-    // sepIt = std::find(beginCmdIt, m_byteStream.end(), CMD_SEPARATOR);
     beginCmdIt += offset_to_new_cmd;
 
   } while (beginCmdIt != endCmdIt);
