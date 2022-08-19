@@ -24,6 +24,7 @@ namespace cmd
   // class Cmd;
 }
 
+/*
 inline std::string strTD_local2gmt(std::string localstr)
 {
   std::string gmtstr;
@@ -40,6 +41,7 @@ inline std::string strTD_local2gmt(std::string localstr)
   
   return gmtstr;
 }
+
 
 inline std::string strTD_gmt2local(std::string gmtstr)
 {
@@ -81,7 +83,7 @@ inline std::string strTD_getLocalTime()
   
   return oss.str();
 }
-
+*/
 
 // #include "Cmd.h"
 
