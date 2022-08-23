@@ -92,8 +92,7 @@ void variousTests()
   buffer[0] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
   buffer[1] = cmd_format::t_CmdId::COMMAND_WATCHDOG;
   buffer[2] = cmd_format::t_watchdog::REG_WATCHDOG_WATCH;
-  buffer[3] = 0;
-  buffer[4] = static_cast<unsigned char>(60);
+  buffer[3] = static_cast<unsigned char>(60);
   cmdManager.getByteStream(&buffer[0], sizeof(buffer));
   res = cmdManager.parseCommand();
   std::cout << "Res parse cmd watchdog watch: " << res << std::endl;
@@ -109,10 +108,9 @@ void variousTests()
   buffer[0] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
   buffer[1] = cmd_format::t_CmdId::COMMAND_WATCHDOG;
   buffer[2] = cmd_format::t_watchdog::REG_WATCHDOG_WATCH;
-  buffer[3] = 0;
-  buffer[4] = static_cast<unsigned char>(60);
-  buffer[5] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
-  buffer[6] = cmd_format::t_CmdId::COMMAND_IMMEDIATE_REBOOT;
+  buffer[3] = static_cast<unsigned char>(60);
+  buffer[4] = cmd_format::t_ServiceId::SERViCE_COMMAND_DISTRIBUTION;
+  buffer[5] = cmd_format::t_CmdId::COMMAND_IMMEDIATE_REBOOT;
 
   // std::cout << '\n';
   // for (int i=0; i<7; i++)
