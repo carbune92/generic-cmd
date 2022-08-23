@@ -184,15 +184,22 @@ int ComManager::parseWatchdogCmd(def::data_t::iterator itBegin,
   {
     case t_watchdog::REG_WATCHDOG_WAKE:
     {
-      offsetNewCmd = t_watchdog::NR_BYTES_PARAMS_WAKE+1;
-      params.insert(params.begin(), itBegin+1, itBegin+offsetNewCmd);
+      offsetNewCmd = t_watchdog::NR_BYTES_PARAMS_WAKE;
+      params.insert(params.begin(), itBegin, itBegin+offsetNewCmd);
       p->init(itsServContainer->get_Piwatcher_server(), &PiWatcherServer::wake, params);
       break;
     }
     case t_watchdog::REG_WATCHDOG_WATCH:
     {
-      offsetNewCmd = t_watchdog::NR_BYTES_PARAMS_WATCH+1;
-      params.insert(params.begin(), itBegin+1, itBegin+offsetNewCmd);
+      offsetNewCmd = t_watchdog::NR_BYTES_PARAMS_WATCH;
+      params.insert(params.begin(), itBegin, itBegin+offsetNewCmd);
+
+      // for (auto x : params)
+      // {
+      //   std::cout << (int)x <<" ";
+      // }
+      // std::cout << std::endl;
+
       p->init(itsServContainer->get_Piwatcher_server(), &PiWatcherServer::watch, params);
       break;
     }
