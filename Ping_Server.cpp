@@ -3,7 +3,7 @@
 
 #include "Cmd.h"
 
-#include "Comm_RFD868_STUB.h"
+#include "Comm_RFD868__STUB.h"
 
 bool cmptm(const std::string& tm1, const std::string& tm2)
 {
