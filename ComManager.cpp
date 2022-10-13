@@ -63,7 +63,7 @@ int ComManager::parseCommand()
     int offset_to_new_cmd = 0;
     const int HEADER_SZ = 2;
     // std::cout << "[DBG]: " << (int)sid << '\n';
-    // std::cout << "c0: " << (int)(*beginCmdIt) << '\n';
+    // std::cout << "beginCmdIt: " << (int)(*beginCmdIt) << '\n';
 
     if (t_ServiceId::SERViCE_COMMAND_DISTRIBUTION == sid)
     {
@@ -75,7 +75,7 @@ int ComManager::parseCommand()
         {
           res = parseRebootCmd(beginCmdIt+HEADER_SZ, offset_to_new_cmd);
           cmdFound = true;
-          offset_to_new_cmd += HEADER_SZ + 1;
+          offset_to_new_cmd += HEADER_SZ;
           // std::cout << offset_to_new_cmd << '\n';
           break;  
         }
@@ -83,7 +83,7 @@ int ComManager::parseCommand()
         {
           res = parseWatchdogCmd(beginCmdIt+HEADER_SZ, offset_to_new_cmd);
           cmdFound = true;
-          offset_to_new_cmd += HEADER_SZ + 1;
+          offset_to_new_cmd += HEADER_SZ;
           break;
         }
         default:
@@ -107,7 +107,7 @@ int ComManager::parseCommand()
           res = parsePingCmd(beginCmdIt+HEADER_SZ, offset_to_new_cmd, def::e_Ping);
           cmdFound = true;
           // std::cout << offset_to_new_cmd << '\n';
-          offset_to_new_cmd += HEADER_SZ + 1;
+          offset_to_new_cmd += HEADER_SZ;
           break;
         }
         default:
@@ -241,6 +241,8 @@ int ComManager::parsePingCmd(def::data_t::iterator itBegin,
   p->init(itsServContainer->get_Ping_server(), &PingServer::addToModemQueue, params);
   
   itsCommContainer->push_back(utilfunc::addPolicy<PingServer,policies::Logged>(p), cmdType);
+  
+  std::cout << "ComManager::parsePingCmd\n";
 
   return res;
 }
