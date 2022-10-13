@@ -97,7 +97,6 @@ def::data_t PingServer::sendResponse(def::data_t req)
   
   // std::cout << "serialized ping response to send: " << toSend << std::endl;
   std::cout << "[PING_CMD] : serialized ping response to send: " << toSend << std::endl;
-  
   std::cout << "[PING CMD] :" << pair.first << " : " << pair.second << std::endl;
   
   // send via modem

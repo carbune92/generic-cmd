@@ -781,6 +781,67 @@ void test_decode_ping_new_queue()
  
 }
 
+void test_decode_multiple_pings()
+{
+  std::cout << "START_TEST : " << __FUNCTION__ << std::endl;
+  ComManager cmdManager = init();
+  ComQueueContainer& qContainer = cmdManager.getComQueueContainer();
+  ComServerContainer& sContainer = cmdManager.getServeContainer();
+  
+  // 1st command  
+  std::vector<uint8_t> a_param{cmd_format::t_ServiceId::DIAGNOSTICS, cmd_format::t_CmdId::COMMAND_PING};
+  a_param.insert(a_param.end(), {'2','1','0','6','2','0','2','2','1','7','0','3','5','5'});
+  int ack = 841;
+  a_param.push_back(static_cast<uint8_t>((ack >> 8) & 0xff));
+  a_param.push_back(static_cast<uint8_t>(ack & 0xff));
+  
+  // 2nd command
+  a_param.push_back(cmd_format::t_ServiceId::DIAGNOSTICS);
+  a_param.push_back(cmd_format::t_CmdId::COMMAND_PING);
+  a_param.insert(a_param.end(), {'2','1','0','6','2','0','2','2','1','7','0','3','5','9'});
+  ack = 842;
+  a_param.push_back(static_cast<uint8_t>((ack >> 8) & 0xff));
+  a_param.push_back(static_cast<uint8_t>(ack & 0xff));
+  // std::cout << a_param.size() << '\n';
+  
+  
+  cmdManager.getByteStream(&a_param[0], a_param.size());
+  int res = cmdManager.parseCommand();
+  std::cout << "Res of parsed ping cmd: " << res << std::endl;
+  assert(res >= 0);
+  PASSED_M("Ping cmd was parsed.");
+  
+  modem.getPingQueue().clear();
+  modem.getPingQueuePtr().clear();
+  assert(2 == qContainer.get_CmdQ(def::e_Ping).size());
+  PASSED_M("Ping Q has 2 elements.");
+  
+  for (auto p : qContainer.get_CmdQ(def::e_Ping))
+  {
+    p->execute();
+    bool isinst = utilfunc::isInstanceOf<cmd::Cmd<PingServer,policies::Logged>>(p);
+    assert(isinst);
+    PASSED_M("p is an instance of cmd::Cmd<PingServer,policies::Logged>.");
+    
+    if (isinst)
+    {
+      policies::Logged& l = dynamic_cast<policies::Logged&>(*p);
+      l.setFileStream("./ping_log.txt");
+      l.log(sContainer.get_Ping_server());
+    }
+  }
+  
+  assert(2 == modem.getPingQueuePtr().size());
+  PASSED_M("Modem Q ptr has 2 elements.");
+  
+  for (auto q : modem.getPingQueuePtr())
+  {
+    // std::cout << q.recv_tm << " : " << q.recv_ack << std::endl;
+    q->execute();
+  }
+}
+
+
 
 
 int main()
@@ -802,6 +863,8 @@ int main()
   // test_decode_ping_wrong_td();
   // std::cout << "====================================================\n";
   test_decode_ping_new_queue();
+  std::cout << "====================================================\n";
+  test_decode_multiple_pings();
   std::cout << "====================================================\n";
   
   return 0;
